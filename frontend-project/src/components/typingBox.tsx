@@ -1,15 +1,28 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { TypingNavbar } from "./typingNavbar";
+
+type Mode = "time" | "words" | "zen";
+
+type Level = 1 | 2 | 3 | null;
+
 
 export function TypingBox() {
-    const text = "The silent moon watched curious cats wander across narrow streets while distant clocks ticked softly and warm lights flickered through old windows as travelers paused briefly to listen breathe and move forward without knowing where the night might gently lead them next";
+    const text = "The quiet river reflected broken stars as bicycles whispered past sleeping shops and paper signs curled in doorways while a baker laughed alone birds shifted on wires and a stray dog followed footsteps patiently believing dawn would arrive soon carrying bread warmth stories and the soft courage needed to begin again without maps promises or fear under pale skies where minutes stretched kindly listeners learned to breathe slowly walk lightly trust silence memory chance rhythm time forward together tonight softly";
     const words = text.split(" ");
 
     const [currentWordIdx, setCurrentWordIdx] = useState(0);
     const [currentLetterIdx, setCurrentLetterIdx] = useState(0);
     const [typedWords, setTypedWords] = useState<string[]>([]);
 
+    const [mode, setMode] = useState<Mode>("time");
+    const [timer, setTimer] = useState(60);
+    const [punctuation, setPunctuation] = useState(false);
+    const [numbers, setNumbers] = useState(false);
+    const [level, setLevel] = useState<Level>(2);
+
     const letterRefs = useRef<HTMLSpanElement[][]>([]);
     const caretRef = useRef<HTMLSpanElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     const getWordClass = (wordIdx: number) => {
         if (wordIdx < currentWordIdx) return "opacity-60";
@@ -39,8 +52,8 @@ export function TypingBox() {
 
     useLayoutEffect(() => {
         const caret = caretRef.current;
-        if (!caret) return;
-
+        const container = containerRef.current;
+        if (!caret || !container) return;
         const letters = letterRefs.current[currentWordIdx];
         if (!letters) return;
 
@@ -61,7 +74,15 @@ export function TypingBox() {
             y = letters[0].offsetTop + letters[0].offsetHeight - caret.offsetHeight;
         }
 
-        caret.style.transform = `translate(${x}px, ${y}px)`;
+        caret.style.transform = `translate(${x - 1}px, ${y - 1}px)`;
+        const visibleHeight = container.clientHeight;
+        const caretHeight = caret.offsetHeight;
+        const targetScroll = y - (visibleHeight / 2) + (caretHeight / 2);
+        container.scrollTo({
+            top: targetScroll > 0 ? targetScroll : 0,
+            behavior: "smooth"
+        });
+
     }, [currentWordIdx, currentLetterIdx, typedWords]);
 
     useEffect(() => {
@@ -100,9 +121,22 @@ export function TypingBox() {
     return (
         <div className="flex items-center justify-center w-full">
             <div className="w-full max-w-5xl">
+                <TypingNavbar
+                    timer={timer}
+                    setTimer={setTimer}
+                    punctuation={punctuation}
+                    setPunctuation={setPunctuation}
+                    numbers={numbers}
+                    setNumbers={setNumbers}
+                    mode={mode}
+                    setMode={setMode}
+                    level={level}
+                    setLevel={setLevel}
+                />
                 <div
+                    ref={containerRef}
                     className="
-                        min-h-50
+                        h-70
                         rounded-3xl
                         bg-zinc-900/70
                         backdrop-blur-xl
@@ -113,22 +147,25 @@ export function TypingBox() {
                         text-xl
                         leading-relaxed
                         font-mono
-                        overflow-hidden
-                        cursor-default">
+                        overflow-hidden 
+                        cursor-default
+                        relative
+                    ">
                     <div className="relative select-none leading-relaxed wrap-break-word">
                         <span
                             ref={caretRef}
-                                className="
-                                    absolute
-                                    w-0.5
-                                    h-[1em]
-                                    bg-amber-500
-                                    rounded
-                                    animate-pulse
-                                    transition-all
-                                    duration-75
-                                    ease-out
-                                    z-10"/>
+                            className="
+                                absolute
+                                w-0.5
+                                h-[1em]
+                                bg-amber-500
+                                rounded
+                                animate-pulse
+                                transition-all
+                                duration-75
+                                ease-out
+                                z-10"
+                        />
 
                         {words.map((word, wordIdx) => {
                             const typed = typedWords[wordIdx] || "";
@@ -152,8 +189,7 @@ export function TypingBox() {
                                                 word,
                                                 wordIdx,
                                                 letterIdx
-                                            )} transition-colors duration-150`}
-                                        >
+                                            )} transition-colors duration-150`}>
                                             {letter}
                                         </span>
                                     ))}
