@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useMemo, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { TypingNavbar } from "./typingNavbar";
 
 type Mode = "time" | "words" | "zen";
@@ -8,11 +8,15 @@ type Level = 1 | 2 | 3 | null;
 
 export function TypingBox() {
     const text = "The quiet river reflected broken stars as bicycles whispered past sleeping shops and paper signs curled in doorways while a baker laughed alone birds shifted on wires and a stray dog followed footsteps patiently believing dawn would arrive soon carrying bread warmth stories and the soft courage needed to begin again without maps promises or fear under pale skies where minutes stretched kindly listeners learned to breathe slowly walk lightly trust silence memory chance rhythm time forward together tonight softly";
-    const words = text.split(" ");
+    const words = useMemo(() => text.split(" "), []);
 
     const [currentWordIdx, setCurrentWordIdx] = useState(0);
     const [currentLetterIdx, setCurrentLetterIdx] = useState(0);
     const [typedWords, setTypedWords] = useState<string[]>([]);
+    const [stats, setStats] = useState({
+        correctChar: 0,
+        incorrectChar: 0
+    })
 
     const [mode, setMode] = useState<Mode>("time");
     const [timer, setTimer] = useState(60);
@@ -90,9 +94,20 @@ export function TypingBox() {
             if (e.key.length > 1 && e.key !== "Backspace" && e.key !== " ") return;
 
             const currentTyped = typedWords[currentWordIdx] || "";
+            const currentTargetWord = words[currentWordIdx];
 
             if (e.key === "Backspace") {
                 if (currentLetterIdx > 0) {
+                    const charDeleted = currentTyped[currentTyped.length - 1];
+                    const charExpected = currentTargetWord[currentLetterIdx - 1];
+
+                    if (charDeleted === charExpected) {
+                        setStats((prev) => ({
+                            ...prev,
+                            correctChar: Math.max(0, prev.correctChar - 1),
+                        }));
+                    }
+
                     const updated = [...typedWords];
                     updated[currentWordIdx] = currentTyped.slice(0, -1);
                     setTypedWords(updated);
@@ -102,7 +117,7 @@ export function TypingBox() {
             }
 
             if (e.key === " ") {
-                if (currentLetterIdx === 0 && currentTyped === "") return;
+                if (currentLetterIdx === 0 && currentTyped === "") return; // Prevent empty jumps
                 setCurrentWordIdx((i) => i + 1);
                 setCurrentLetterIdx(0);
                 return;
@@ -112,11 +127,26 @@ export function TypingBox() {
             updated[currentWordIdx] = currentTyped + e.key;
             setTypedWords(updated);
             setCurrentLetterIdx((i) => i + 1);
+
+            const charExpected = currentTargetWord[currentLetterIdx];
+
+            if (charExpected && e.key === charExpected) {
+                setStats((prev) => ({ ...prev, correctChar: prev.correctChar + 1 }));
+            } else {
+                setStats((prev) => ({ ...prev, incorrectChar: prev.incorrectChar + 1 }));
+            }
         };
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [currentLetterIdx, currentWordIdx, typedWords]);
+    }, [currentLetterIdx, currentWordIdx, typedWords, words]);
+
+    const calculateAccuracy = () => {
+        const total = stats.correctChar + stats.incorrectChar;
+        if (total === 0) return 100;
+
+        return ((stats.correctChar / total) * 100).toFixed(2);
+    };
 
     return (
         <div className="flex items-center justify-center w-full">
@@ -211,6 +241,9 @@ export function TypingBox() {
                             );
                         })}
                     </div>
+                </div>
+                <div>
+                    Accuracy{calculateAccuracy()}
                 </div>
             </div>
         </div>

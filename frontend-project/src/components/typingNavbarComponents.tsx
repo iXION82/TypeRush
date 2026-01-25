@@ -12,7 +12,7 @@ export function Toggle({
       onClick={onClick}
       className={`
         text-sm cursor-pointer transition-colors
-        ${active ? "text-white" : "text-neutral-500 hover:text-neutral-300"}
+        ${active ? "text-white" : "text-neutral-500 hover:text-amber-400 transition"}
       `}
     >
       {label}
@@ -37,7 +37,7 @@ export function ModeButton({
         px-3 py-1 rounded-lg cursor-pointer transition-all
         ${active
           ? "bg-neutral-800 text-white"
-          : "text-neutral-400 hover:text-white"}
+          : "text-neutral-400 hover:text-amber-400 transition"}
       `}
     >
       {label}
@@ -61,7 +61,7 @@ export function LevelGroup({
           onClick={() => onSelect(v)}
           className={`
             text-sm cursor-pointer transition-colors
-            ${active == v ? "text-white" : "text-neutral-500 hover:text-neutral-300"}
+            ${active == v ? "text-white" : "text-neutral-500 hover:text-amber-400 transition"}
           `}
         >
           {v}
