@@ -2,10 +2,9 @@ import { useMemo, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { TypingNavbar } from "./typingNavbar";
 
 type Mode = "time" | "words" | "zen";
-
 type Level = 1 | 2 | 3 | null;
-
 type State = "idle" | "playing" | "end";
+
 export function TypingBox() {
     const text = "The quiet river reflected broken stars as bicycles whispered past sleeping shops and paper signs curled in doorways while a baker laughed alone birds shifted on wires and a stray dog followed footsteps patiently believing dawn would arrive soon carrying bread warmth stories and the soft courage needed to begin again without maps promises or fear under pale skies where minutes stretched kindly listeners learned to breathe slowly walk lightly trust silence memory chance rhythm time forward together tonight softly";
     const words = useMemo(() => text.split(" "), []);
@@ -17,7 +16,7 @@ export function TypingBox() {
     const [stats, setStats] = useState({
         correctChar: 0,
         incorrectChar: 0
-    })
+    });
 
     const [mode, setMode] = useState<Mode>("time");
     const [timer, setTimer] = useState(60);
@@ -28,6 +27,7 @@ export function TypingBox() {
     const letterRefs = useRef<HTMLSpanElement[][]>([]);
     const caretRef = useRef<HTMLSpanElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const timerIntervalRef = useRef<number | null>(null);
 
     const getWordClass = (wordIdx: number) => {
         if (wordIdx < currentWordIdx) return "opacity-60";
@@ -35,24 +35,24 @@ export function TypingBox() {
         return "opacity-40";
     };
 
-    const getLetterClass = (
-        word: string,
-        wordIdx: number,
-        letterIdx: number
-    ) => {
+    const getLetterClass = (word: string, wordIdx: number, letterIdx: number) => {
         const typed = typedWords[wordIdx]?.[letterIdx];
-
         if (wordIdx < currentWordIdx) {
             return typed === word[letterIdx] ? "text-green-400" : "text-red-400";
         }
-
         if (wordIdx === currentWordIdx) {
             if (letterIdx === currentLetterIdx) return "text-amber-400";
             if (typed == null) return "text-zinc-400";
             return typed === word[letterIdx] ? "text-green-400" : "text-red-400";
         }
-
         return "text-zinc-400";
+    };
+
+    const clearTimer = () => {
+        if (timerIntervalRef.current) {
+            clearInterval(timerIntervalRef.current);
+            timerIntervalRef.current = null;
+        }
     };
 
     useLayoutEffect(() => {
@@ -91,21 +91,13 @@ export function TypingBox() {
     }, [currentWordIdx, currentLetterIdx, typedWords]);
 
     const startGameTimer = () => {
-
-        if (level === 1) {
-            setTimer(30);
-        } else if (level === 2) {
-            setTimer(60);
-        } else if (level == 3) {
-            setTimer(120);
-        } else {
-            return;
-        }
+        clearTimer();
         setState("playing");
-        const clock = setInterval(() => {
+        
+        timerIntervalRef.current = setInterval(() => {
             setTimer(prev => {
                 if (prev <= 1) {
-                    clearInterval(clock);
+                    clearTimer();
                     setState("end");
                     return 0;
                 }
@@ -113,35 +105,26 @@ export function TypingBox() {
             });
         }, 1000);
     };
+
+    const getWordLimit = () => {
+        if (level === 1) return 25;
+        if (level === 2) return 50;
+        return 100;
+    };
+
     const startGameWords = () => {
-
+        clearTimer();
         setTimer(0);
-        let wordlimit = 25;
-        if (level === 1) {
-            wordlimit = 25;
-        } else if (level === 2) {
-            wordlimit = 50;
-        } else if (level == 3) {
-            wordlimit = 100;
-        } else {
-            return;
-        }
         setState("playing");
+        
+        timerIntervalRef.current = setInterval(() => {
 
-        const clock = setInterval(() => {
-            setTimer(prev => {
-                if (typedWords.length >= wordlimit) {
-                    clearInterval(clock);
-                    setState("end");
-                    return 0;
-                }
-                return prev + 1;
-            });
+            setTimer(prev => prev + 1);
         }, 1000);
     };
 
-
     const restartGame = () => {
+        clearTimer();
         setState("idle");
         setCurrentWordIdx(0);
         setCurrentLetterIdx(0);
@@ -150,21 +133,80 @@ export function TypingBox() {
             correctChar: 0,
             incorrectChar: 0
         });
-        setTimer(5);
-    }
+        
+        if(mode === "time"){
+            if(level === 1) setTimer(30);
+            if(level === 2) setTimer(60);
+            if(level === 3) setTimer(120);
+        } else {
+            setTimer(0);
+        }
+    };
+
+    const difficultyMultiplier = () => {
+        let temp = 1;
+        if (punctuation) temp += 0.5;
+        if (numbers) temp += 0.5;
+        return temp;
+    };
+
+    const getTimeElapsed = () => {
+        if (mode === "time") {
+            if (level === 1) return 30;
+            if (level === 2) return 60;
+            if (level === 3) return 120;
+            return 60;
+        } 
+
+        return timer; 
+    };
+
+    const calculateStats = () => {
+        const timeElapsed = Math.max(1, getTimeElapsed()); 
+        const minutes = timeElapsed / 60;
+        const totalChars = stats.correctChar + stats.incorrectChar;
+
+        const gross = (totalChars / 5) / minutes;
+        const net = (stats.correctChar / 5) / minutes;
+        
+
+        const accuracy = totalChars === 0 ? 100 : (stats.correctChar / totalChars) * 100;
+ 
+        const scoreVal = Math.ceil(net * (accuracy / 100) * difficultyMultiplier());
+
+        return {
+            gross: gross.toFixed(0),
+            net: net.toFixed(0),
+            accuracy: accuracy.toFixed(2),
+            time: timeElapsed,
+            score: scoreVal
+        };
+    };
+
+    useEffect(() => {
+        if (state === "end" || state === "idle") {
+            clearTimer();
+        }
+    }, [state]);
+
+    useEffect(() => {
+        return () => {
+            clearTimer();
+        };
+    }, []);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key.length > 1 && e.key !== "Backspace" && e.key !== " ") return;
-            console.log(mode);
+            
             if (state === "idle") {
                 if (mode === "time") {
                     startGameTimer();
                 } else if (mode === "words") {
-                    console.log("hello");
                     startGameWords();
+                } else if (mode === "zen") {
+                    setState("playing");
                 }
-
             } else if (state === "end") return;
 
             const currentTyped = typedWords[currentWordIdx] || "";
@@ -192,6 +234,19 @@ export function TypingBox() {
 
             if (e.key === " ") {
                 if (currentLetterIdx === 0 && currentTyped === "") return;
+                
+                const updated = [...typedWords];
+                updated[currentWordIdx] = currentTyped; 
+                setTypedWords(updated);
+
+                if (mode === "words") {
+                     const limit = getWordLimit();
+                     if (currentWordIdx + 1 >= limit) {
+                         setState("end");
+                         return;
+                     }
+                }
+
                 setCurrentWordIdx((i) => i + 1);
                 setCurrentLetterIdx(0);
                 return;
@@ -215,12 +270,7 @@ export function TypingBox() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [currentLetterIdx, currentWordIdx, typedWords, words, state, mode, level]);
 
-    const calculateAccuracy = () => {
-        const total = stats.correctChar + stats.incorrectChar;
-        if (total === 0) return 100;
-
-        return ((stats.correctChar / total) * 100).toFixed(2);
-    };
+    const results = state === "end" ? calculateStats() : null;
 
     return (
         <div className="flex items-center justify-center w-full">
@@ -255,15 +305,19 @@ export function TypingBox() {
                         cursor-default
                         relative
                     ">
-                    {state === "end" ? (
+                    {state === "end" && results ? (
                         <div className="flex justify-center items-center w-full h-full">
-                            <div>
-                                <div>
-                                    <div>Accuracy{calculateAccuracy()}</div>
-                                    <div>Score:100</div>
+                            <div className="text-center">
+                                <div className="flex flex-wrap justify-center m-6 gap-4">
+                                    <div className="text-2xl text-zinc-400">Accuracy: {results.accuracy}%</div>
+                                    <div className="text-2xl text-zinc-400">Net WPM: {results.net}</div>
+                                    <div className="text-2xl text-zinc-400">Gross WPM: {results.gross}</div>
+                                    <div className="text-2xl text-zinc-400">Time: {results.time}s</div>
                                 </div>
-                                <div>
+                                <div className="text-3xl text-zinc-200 m-3 font-bold">Total Score: {results.score}</div>
+                                <div className="mt-8">
                                     <button
+                                        className="px-6 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-lg transition shadow-lg shadow-amber-500/20"
                                         onClick={() => { restartGame() }}
                                     >Restart Game</button>
                                 </div>
@@ -331,9 +385,6 @@ export function TypingBox() {
                         })}
                     </div>)}
 
-                </div>
-                <div>
-                    Accuracy{calculateAccuracy()}
                 </div>
             </div>
         </div>
