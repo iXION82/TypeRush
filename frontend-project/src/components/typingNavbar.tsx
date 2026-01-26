@@ -47,7 +47,7 @@ export function TypingNavbar({
         )}
       </AnimatePresence>
 
-      <motion.div 
+      <motion.div
         layout
         transition={{ type: "spring", bounce: 0, duration: 0.4 }}
         className="flex items-center gap-6 px-8 py-3 border border-neutral-700 bg-neutral-900 rounded-full overflow-hidden"
@@ -76,31 +76,31 @@ export function TypingNavbar({
           )}
         </AnimatePresence>
         <motion.div layout className="flex gap-4">
-            <ModeButton
+          <ModeButton
             label="Time"
             active={mode === "time"}
             onClick={() => {
-                setMode("time");
-                setLevel(1);
-                setTimer(60);
+              setMode("time");
+              setLevel(1);
+              setTimer(60);
             }}
-            />
-            <ModeButton
+          />
+          <ModeButton
             label="Words"
             active={mode === "words"}
             onClick={() => {
-                setMode("words");
-                setLevel(1);
+              setMode("words");
+              setLevel(1);
             }}
-            />
-            <ModeButton
+          />
+          <ModeButton
             label="Zen"
             active={mode === "zen"}
             onClick={() => {
-                setMode("zen");
-                setLevel(null);
+              setMode("zen");
+              setLevel(null);
             }}
-            />
+          />
         </motion.div>
 
         <AnimatePresence mode="popLayout">
@@ -112,20 +112,28 @@ export function TypingNavbar({
               exit={{ opacity: 0, width: 0 }}
               className="flex items-center gap-6 overflow-hidden whitespace-nowrap">
               <div className="w-px h-4 bg-neutral-700 mx-2" />
-              
+
               {mode === "time" ? (
                 <LevelGroup
                   key="time-levels"
                   values={[30, 60, 120]}
-                  active={timer}
-                  onSelect={(v) => setTimer(v)}
+                  active={level}
+                  onSelect={(newLevel) => {
+                    setLevel(newLevel as Level);
+                    if (newLevel === 1) setTimer(30);
+                    if (newLevel === 2) setTimer(60);
+                    if (newLevel === 3) setTimer(120);
+                  }}
                 />
               ) : (
                 <LevelGroup
                   key="word-levels"
                   values={[25, 50, 100]}
                   active={level}
-                  onSelect={(v) => setLevel(v as Level)}
+                  onSelect={(v) => {
+                    setLevel(v as Level);
+                    setTimer(0);
+                  }}
                 />
               )}
             </motion.div>

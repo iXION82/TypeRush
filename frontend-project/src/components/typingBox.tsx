@@ -20,7 +20,7 @@ export function TypingBox() {
     })
 
     const [mode, setMode] = useState<Mode>("time");
-    const [timer, setTimer] = useState(5);
+    const [timer, setTimer] = useState(60);
     const [punctuation, setPunctuation] = useState(false);
     const [numbers, setNumbers] = useState(false);
     const [level, setLevel] = useState<Level>(2);

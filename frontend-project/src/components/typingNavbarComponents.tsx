@@ -55,13 +55,13 @@ export function LevelGroup({
 }) {
   return (
     <div className="flex gap-3 ml-4">
-      {values.map((v) => (
+      {values.map((v, vindx) => (
         <span
-          key={v}
-          onClick={() => onSelect(v)}
+          key={vindx}
+          onClick={() => onSelect(vindx + 1)} 
           className={`
             text-sm cursor-pointer transition-colors
-            ${active == v ? "text-white" : "text-neutral-500 hover:text-amber-400 transition"}
+            ${active === vindx + 1 ? "text-white" : "text-neutral-500 hover:text-amber-400 transition"}
           `}
         >
           {v}
@@ -70,4 +70,3 @@ export function LevelGroup({
     </div>
   );
 }
-
