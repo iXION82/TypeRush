@@ -27,6 +27,7 @@ export function TypingBox() {
     const letterRefs = useRef<HTMLSpanElement[][]>([]);
     const caretRef = useRef<HTMLSpanElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+
     const timerIntervalRef = useRef<number | null>(null);
 
     const getWordClass = (wordIdx: number) => {
@@ -157,21 +158,19 @@ export function TypingBox() {
             if (level === 3) return 120;
             return 60;
         } 
-
         return timer; 
     };
 
     const calculateStats = () => {
-        const timeElapsed = Math.max(1, getTimeElapsed()); 
+        const timeElapsed = Math.max(1, getTimeElapsed());
         const minutes = timeElapsed / 60;
         const totalChars = stats.correctChar + stats.incorrectChar;
-
+        
         const gross = (totalChars / 5) / minutes;
         const net = (stats.correctChar / 5) / minutes;
         
-
         const accuracy = totalChars === 0 ? 100 : (stats.correctChar / totalChars) * 100;
- 
+        
         const scoreVal = Math.ceil(net * (accuracy / 100) * difficultyMultiplier());
 
         return {
@@ -183,12 +182,14 @@ export function TypingBox() {
         };
     };
 
+    // Cleanup when state changes to end/idle
     useEffect(() => {
         if (state === "end" || state === "idle") {
             clearTimer();
         }
     }, [state]);
 
+    // Cleanup on unmount
     useEffect(() => {
         return () => {
             clearTimer();
@@ -264,6 +265,17 @@ export function TypingBox() {
             } else {
                 setStats((prev) => ({ ...prev, incorrectChar: prev.incorrectChar + 1 }));
             }
+
+            if (mode === "words") {
+                const limit = getWordLimit();
+
+                if (currentWordIdx === limit - 1) {
+
+                    if (updated[currentWordIdx].length === currentTargetWord.length) {
+                        setState("end");
+                    }
+                }
+            }
         };
 
         window.addEventListener("keydown", handleKeyDown);
@@ -290,7 +302,7 @@ export function TypingBox() {
                 <div
                     ref={containerRef}
                     className="
-                        h-70
+                        h-79
                         rounded-3xl
                         bg-zinc-900/70
                         backdrop-blur-xl
@@ -306,21 +318,52 @@ export function TypingBox() {
                         relative
                     ">
                     {state === "end" && results ? (
-                        <div className="flex justify-center items-center w-full h-full">
-                            <div className="text-center">
-                                <div className="flex flex-wrap justify-center m-6 gap-4">
-                                    <div className="text-2xl text-zinc-400">Accuracy: {results.accuracy}%</div>
-                                    <div className="text-2xl text-zinc-400">Net WPM: {results.net}</div>
-                                    <div className="text-2xl text-zinc-400">Gross WPM: {results.gross}</div>
-                                    <div className="text-2xl text-zinc-400">Time: {results.time}s</div>
+                        <div className="absolute inset-0 flex items-center justify-center z-20">
+                            <div className="
+                                w-full
+                                rounded-2xl
+                                bg-zinc-900/90
+                                backdrop-blur-2xl
+                                border border-zinc-700/50
+                                shadow-2xl
+                                px-10
+                                py-8
+                                text-center
+                                animate-fade-in
+                            ">
+
+                                <div className="mb-8">
+                                    <div className="text-sm uppercase tracking-widest text-zinc-400">Total Score</div>
+                                    <div className="text-5xl font-extrabold text-amber-400 mt-1 drop-shadow">{results.score}</div>
                                 </div>
-                                <div className="text-3xl text-zinc-200 m-3 font-bold">Total Score: {results.score}</div>
-                                <div className="mt-8">
-                                    <button
-                                        className="px-6 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-lg transition shadow-lg shadow-amber-500/20"
-                                        onClick={() => { restartGame() }}
-                                    >Restart Game</button>
+
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                                    <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 py-4">
+                                        <div className="text-xs uppercase tracking-wide text-zinc-400">Accuracy</div>
+                                        <div className="text-xl font-semibold text-zinc-200">{results.accuracy}%</div>
+                                    </div>
+                                    <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 py-4">
+                                        <div className="text-xs uppercase tracking-wide text-zinc-400">Net WPM</div>
+                                        <div className="text-xl font-semibold text-zinc-200">{results.net}</div>
+                                    </div>
+                                    <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 py-4">
+                                        <div className="text-xs uppercase tracking-wide text-zinc-400">Gross WPM</div>
+                                        <div className="text-xl font-semibold text-zinc-200">{results.gross}</div>
+                                    </div>
+                                    <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 py-4">
+                                        <div className="text-xs uppercase tracking-wide text-zinc-400">Time</div>
+                                        <div className="text-xl font-semibold text-zinc-200">{results.time}s</div>
+                                    </div>
                                 </div>
+
+                                <button
+                                    onClick={restartGame}
+                                    className="
+                                        px-8 py-3 rounded-xl bg-amber-500 text-black font-bold tracking-wide
+                                        hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/30 active:scale-95
+                                    ">
+                                    Restart
+                                </button>
                             </div>
                         </div>
 
