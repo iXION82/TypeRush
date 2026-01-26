@@ -5,7 +5,7 @@ type Mode = "time" | "words" | "zen";
 
 type Level = 1 | 2 | 3 | null;
 
-
+type State = "idle" | "playing" | "end";
 export function TypingBox() {
     const text = "The quiet river reflected broken stars as bicycles whispered past sleeping shops and paper signs curled in doorways while a baker laughed alone birds shifted on wires and a stray dog followed footsteps patiently believing dawn would arrive soon carrying bread warmth stories and the soft courage needed to begin again without maps promises or fear under pale skies where minutes stretched kindly listeners learned to breathe slowly walk lightly trust silence memory chance rhythm time forward together tonight softly";
     const words = useMemo(() => text.split(" "), []);
@@ -13,13 +13,14 @@ export function TypingBox() {
     const [currentWordIdx, setCurrentWordIdx] = useState(0);
     const [currentLetterIdx, setCurrentLetterIdx] = useState(0);
     const [typedWords, setTypedWords] = useState<string[]>([]);
+    const [state, setState] = useState<State>("idle");
     const [stats, setStats] = useState({
         correctChar: 0,
         incorrectChar: 0
     })
 
     const [mode, setMode] = useState<Mode>("time");
-    const [timer, setTimer] = useState(60);
+    const [timer, setTimer] = useState(5);
     const [punctuation, setPunctuation] = useState(false);
     const [numbers, setNumbers] = useState(false);
     const [level, setLevel] = useState<Level>(2);
@@ -89,9 +90,82 @@ export function TypingBox() {
 
     }, [currentWordIdx, currentLetterIdx, typedWords]);
 
+    const startGameTimer = () => {
+
+        if (level === 1) {
+            setTimer(30);
+        } else if (level === 2) {
+            setTimer(60);
+        } else if (level == 3) {
+            setTimer(120);
+        } else {
+            return;
+        }
+        setState("playing");
+        const clock = setInterval(() => {
+            setTimer(prev => {
+                if (prev <= 1) {
+                    clearInterval(clock);
+                    setState("end");
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+    const startGameWords = () => {
+
+        setTimer(0);
+        let wordlimit = 25;
+        if (level === 1) {
+            wordlimit = 25;
+        } else if (level === 2) {
+            wordlimit = 50;
+        } else if (level == 3) {
+            wordlimit = 100;
+        } else {
+            return;
+        }
+        setState("playing");
+
+        const clock = setInterval(() => {
+            setTimer(prev => {
+                if (typedWords.length >= wordlimit) {
+                    clearInterval(clock);
+                    setState("end");
+                    return 0;
+                }
+                return prev + 1;
+            });
+        }, 1000);
+    };
+
+
+    const restartGame = () => {
+        setState("idle");
+        setCurrentWordIdx(0);
+        setCurrentLetterIdx(0);
+        setTypedWords([]);
+        setStats({
+            correctChar: 0,
+            incorrectChar: 0
+        });
+        setTimer(5);
+    }
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key.length > 1 && e.key !== "Backspace" && e.key !== " ") return;
+            console.log(mode);
+            if (state === "idle") {
+                if (mode === "time") {
+                    startGameTimer();
+                } else if (mode === "words") {
+                    console.log("hello");
+                    startGameWords();
+                }
+
+            } else if (state === "end") return;
 
             const currentTyped = typedWords[currentWordIdx] || "";
             const currentTargetWord = words[currentWordIdx];
@@ -117,7 +191,7 @@ export function TypingBox() {
             }
 
             if (e.key === " ") {
-                if (currentLetterIdx === 0 && currentTyped === "") return; // Prevent empty jumps
+                if (currentLetterIdx === 0 && currentTyped === "") return;
                 setCurrentWordIdx((i) => i + 1);
                 setCurrentLetterIdx(0);
                 return;
@@ -139,7 +213,7 @@ export function TypingBox() {
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [currentLetterIdx, currentWordIdx, typedWords, words]);
+    }, [currentLetterIdx, currentWordIdx, typedWords, words, state, mode, level]);
 
     const calculateAccuracy = () => {
         const total = stats.correctChar + stats.incorrectChar;
@@ -181,7 +255,22 @@ export function TypingBox() {
                         cursor-default
                         relative
                     ">
-                    <div className="relative select-none leading-relaxed wrap-break-word">
+                    {state === "end" ? (
+                        <div className="flex justify-center items-center w-full h-full">
+                            <div>
+                                <div>
+                                    <div>Accuracy{calculateAccuracy()}</div>
+                                    <div>Score:100</div>
+                                </div>
+                                <div>
+                                    <button
+                                        onClick={() => { restartGame() }}
+                                    >Restart Game</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    ) : (<div className="relative select-none leading-relaxed wrap-break-word">
                         <span
                             ref={caretRef}
                             className="
@@ -240,7 +329,8 @@ export function TypingBox() {
                                 </span>
                             );
                         })}
-                    </div>
+                    </div>)}
+
                 </div>
                 <div>
                     Accuracy{calculateAccuracy()}
