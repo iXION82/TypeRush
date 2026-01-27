@@ -15,6 +15,7 @@ type TypingNavbarProps = {
   setMode: React.Dispatch<React.SetStateAction<Mode>>;
   level: Level;
   setLevel: React.Dispatch<React.SetStateAction<Level>>;
+  restartGame: () => void;
 };
 
 export function TypingNavbar({
@@ -28,6 +29,7 @@ export function TypingNavbar({
   setMode,
   level,
   setLevel,
+  restartGame,
 }: TypingNavbarProps) {
   const isZen = mode === "zen";
   return (
@@ -64,12 +66,18 @@ export function TypingNavbar({
               <Toggle
                 label="Punctuation"
                 active={punctuation}
-                onClick={() => setPunctuation((p) => !p)}
+                onClick={() => {
+                  restartGame();
+                  setPunctuation((p) => !p);
+                }}
               />
               <Toggle
                 label="Numbers"
                 active={numbers}
-                onClick={() => setNumbers((n) => !n)}
+                onClick={() => {
+                  restartGame();
+                  setNumbers((n) => !n);
+                }}
               />
               <div className="w-px h-4 bg-neutral-700 mx-2" />
             </motion.div>
@@ -80,6 +88,7 @@ export function TypingNavbar({
             label="Time"
             active={mode === "time"}
             onClick={() => {
+              restartGame();
               setMode("time");
               setLevel(1);
               setTimer(60);
@@ -89,6 +98,7 @@ export function TypingNavbar({
             label="Words"
             active={mode === "words"}
             onClick={() => {
+              restartGame();
               setMode("words");
               setLevel(1);
             }}
@@ -97,6 +107,7 @@ export function TypingNavbar({
             label="Zen"
             active={mode === "zen"}
             onClick={() => {
+              restartGame();
               setMode("zen");
               setLevel(null);
             }}
@@ -119,6 +130,7 @@ export function TypingNavbar({
                   values={[30, 60, 120]}
                   active={level}
                   onSelect={(newLevel) => {
+                    restartGame();
                     setLevel(newLevel as Level);
                     if (newLevel === 1) setTimer(30);
                     if (newLevel === 2) setTimer(60);
@@ -131,6 +143,7 @@ export function TypingNavbar({
                   values={[25, 50, 100]}
                   active={level}
                   onSelect={(v) => {
+                    restartGame();
                     setLevel(v as Level);
                     setTimer(0);
                   }}

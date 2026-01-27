@@ -122,8 +122,7 @@ export function TypingBox() {
 
             setTimer(prev => prev + 1);
         }, 1000);
-    };
-
+    };    
     const restartGame = () => {
         clearTimer();
         setState("idle");
@@ -168,7 +167,6 @@ export function TypingBox() {
         
         const gross = (totalChars / 5) / minutes;
         const net = (stats.correctChar / 5) / minutes;
-        
         const accuracy = totalChars === 0 ? 100 : (stats.correctChar / totalChars) * 100;
         
         const scoreVal = Math.ceil(net * (accuracy / 100) * difficultyMultiplier());
@@ -296,6 +294,7 @@ export function TypingBox() {
                     setMode={setMode}
                     level={level}
                     setLevel={setLevel}
+                    restartGame={restartGame}
                 />
                 <div
                     ref={containerRef}
