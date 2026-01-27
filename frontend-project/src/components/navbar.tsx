@@ -14,7 +14,9 @@ export function Navbar() {
                     Type<span className="text-amber-500">Rush</span>
                 </h1>
                 <div className="flex gap-6 text-sm text-zinc-300">
-                    <button className="hover:text-amber-400 transition">
+                    <button 
+                        onClick={()=>{navigate("/leaderboard");}}
+                        className="hover:text-amber-400 transition">
                         Leaderboard
                     </button>
                     <button className="hover:text-amber-400 transition">

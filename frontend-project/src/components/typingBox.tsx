@@ -377,8 +377,7 @@ export function TypingBox() {
                                 transition-all
                                 duration-75
                                 ease-out
-                                z-10"
-                        />
+                                z-10"/>
 
                         {words.map((word, wordIdx) => {
                             const typed = typedWords[wordIdx] || "";
