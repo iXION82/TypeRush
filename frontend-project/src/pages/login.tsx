@@ -1,16 +1,38 @@
 import { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useNavigate, Link } from "react-router-dom";
+import { AxiosError } from "axios";
+import api from "../api/api";
+import { setAccessToken } from "../auth/tokenService";
 
 const LoginPage = () => {
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
-        setTimeout(() => setIsLoading(false), 2000);
+        try {
+            setIsLoading(true);
+
+            const res = await api.post("/auth/login", {
+                email,
+                password,
+            });
+
+            const { accessToken, user } = res.data;
+            setAccessToken(accessToken);
+            localStorage.setItem("userId", user._id);
+            navigate("/home");
+        }catch(err) {
+            const error = err as AxiosError<{ message: string }>;
+            setError(error.response?.data?.message || "Login failed");
+        }finally{
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -42,7 +64,11 @@ const LoginPage = () => {
 
                 <form onSubmit={handleLogin} className="space-y-6 relative z-10">
                     
-
+                    {error && (
+                            <div className="text-red-400 text-sm bg-red-500/10 p-2 rounded">
+                                {error}
+                            </div>
+                        )}
                     <div className="space-y-2">
                         <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1">
                             Email
@@ -68,11 +94,9 @@ const LoginPage = () => {
                                     focus:ring-1 focus:ring-amber-500/50 
                                     placeholder:text-zinc-600
                                     transition-all 
-                                    duration-200
-                                "
+                                    duration-200"
                                 placeholder="user@example.com"
-                                required
-                            />
+                                required/>
                         </div>
                     </div>
 
@@ -107,8 +131,7 @@ const LoginPage = () => {
                                     focus:ring-1 focus:ring-amber-500/50 
                                     placeholder:text-zinc-600
                                     transition-all 
-                                    duration-200
-                                "
+                                    duration-200"
                                 placeholder="••••••••"
                                 required/>
                             <button
@@ -138,8 +161,7 @@ const LoginPage = () => {
                             transition-all 
                             shadow-lg shadow-amber-500/20 
                             active:scale-95
-                            mt-2
-                        "
+                            mt-2"
                     >
                         {isLoading ? (
                             <span className="animate-pulse">Accessing...</span>
@@ -154,9 +176,9 @@ const LoginPage = () => {
                 <div className="mt-8 text-center relative z-10">
                     <p className="text-zinc-500 text-sm">
                         Don't have an account?{' '}
-                        <a href="#" className="text-zinc-300 font-semibold hover:text-amber-400 transition-colors">
+                        <Link to="/register" className="text-zinc-300 font-semibold hover:text-amber-400 transition-colors">
                             Create one
-                        </a>
+                        </Link>
                     </p>
                 </div>
             </div>

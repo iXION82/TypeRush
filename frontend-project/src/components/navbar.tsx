@@ -1,4 +1,6 @@
+import { useNavigate } from "react-router-dom";
 export function Navbar() {
+    const navigate = useNavigate();
     return (
         <nav className="
             sticky top-0 z-50
@@ -18,13 +20,14 @@ export function Navbar() {
                     <button className="hover:text-amber-400 transition">
                         Settings
                     </button>
-                    <button className="
-                        px-4 py-2 rounded-full
-                        bg-amber-500/10
-                        text-amber-400
-                        hover:bg-amber-500/20
-                        transition
-                    ">
+                    <button
+                        onClick={()=>{navigate("/login");}}
+                        className="
+                            px-4 py-2 rounded-full
+                            bg-amber-500/10
+                            text-amber-400
+                            hover:bg-amber-500/20
+                            transition">
                         Login
                     </button>
                 </div>
