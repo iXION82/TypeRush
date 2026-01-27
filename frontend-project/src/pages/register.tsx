@@ -1,24 +1,64 @@
 import React, { useState } from 'react';
+import api from '../api/api';
+import { useNavigate, Link } from "react-router-dom";
+import { setAccessToken } from "../auth/tokenService";
 import { Mail, Lock, Eye, EyeOff, User, ArrowRight } from 'lucide-react';
 
 const RegisterPage = () => {
+
+    const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleRegister = (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
+        setError("");
+
         if (password !== confirmPassword) {
-            alert("Passwords do not match!");
+            setError("Passwords do not match!");
             return;
         }
 
-        setIsLoading(true);
-        setTimeout(() => setIsLoading(false), 2000);
+        try {
+            setIsLoading(true);
+
+            const res = await api.post("/auth/register", {
+                username,
+                email,
+                password
+            });
+
+            const { accesstoken, user } = res.data;
+            setAccessToken(accesstoken);
+            localStorage.setItem("userId", user._id);
+
+            navigate("/");
+
+        }catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else if (
+                typeof err === "object" &&
+                err !== null &&
+                "response" in err
+            ) {
+                const axiosError = err as {
+                    response?: { data?: { message?: string } };
+                };
+                setError(
+                    axiosError.response?.data?.message || "Registration failed"
+                );
+            } else {
+                setError("Registration failed");
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -49,7 +89,11 @@ const RegisterPage = () => {
                 </div>
 
                 <form onSubmit={handleRegister} className="space-y-5 relative z-10">
-   
+                    {error && (
+                            <div className="text-red-400 text-sm bg-red-500/10 p-2 rounded">
+                                {error}
+                            </div>
+                        )}
                     <div className="space-y-1">
                         <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1">
                             Username
@@ -222,9 +266,9 @@ const RegisterPage = () => {
                 <div className="mt-8 text-center relative z-10">
                     <p className="text-zinc-500 text-sm">
                         Already have an account?{' '}
-                        <a href="/login" className="text-zinc-300 font-semibold hover:text-amber-400 transition-colors">
+                        <Link to="/login" className="text-zinc-300 font-semibold hover:text-amber-400 transition-colors">
                             Log In
-                        </a>
+                        </Link>
                     </p>
                 </div>
             </div>

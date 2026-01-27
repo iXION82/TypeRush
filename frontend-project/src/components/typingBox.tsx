@@ -182,14 +182,12 @@ export function TypingBox() {
         };
     };
 
-    // Cleanup when state changes to end/idle
     useEffect(() => {
         if (state === "end" || state === "idle") {
             clearTimer();
         }
     }, [state]);
 
-    // Cleanup on unmount
     useEffect(() => {
         return () => {
             clearTimer();
