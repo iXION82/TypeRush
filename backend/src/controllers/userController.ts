@@ -5,7 +5,7 @@ export const updateUser = async (req: Request, res: Response) => {
      try {
         const updatedUser = await User.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            { $push: { scoreIds: req.body.scoreIds } },
             { new: true }
         ).select('-password');
 
