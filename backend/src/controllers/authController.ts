@@ -32,7 +32,7 @@ export const register = async (req: Request, res: Response) => {
             path: "/api/auth/refresh",
         });
 
-        res.status(201).json({ accesstoken, user: newUser });
+        res.status(201).json({ accessToken: accesstoken, user: newUser });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
     }

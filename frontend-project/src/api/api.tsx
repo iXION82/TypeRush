@@ -1,9 +1,9 @@
 import axios from "axios";
-import { getAccessToken,setAccessToken } from "../auth/tokenService";
+import { getAccessToken, setAccessToken } from "../auth/tokenService";
 
 const api = axios.create({
     baseURL: "http://localhost:5000/api",
-    headers:{
+    headers: {
         "Content-Type": "application/json",
     },
     withCredentials: true,
@@ -12,15 +12,14 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         const token = getAccessToken();
-
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-
         return config;
     },
     (error) => Promise.reject(error)
 );
+
 
 api.interceptors.response.use(
     (response) => response,
@@ -28,29 +27,23 @@ api.interceptors.response.use(
         const originalRequest = error.config;
 
         if (
-            error.response?.status === 401 &&
-            !originalRequest._retry
+            error.response?.status === 401 && 
+            !originalRequest._retry &&
+            !originalRequest.url?.includes("/auth/refresh") 
         ) {
             originalRequest._retry = true;
-
             try {
                 const res = await api.post("/auth/refresh");
                 const { accessToken } = res.data;
-
                 setAccessToken(accessToken);
-
-                originalRequest.headers.Authorization =
-                    `Bearer ${accessToken}`;
-
+                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                 return api(originalRequest);
-            } catch {
+            } catch (err) {
                 setAccessToken(null);
-                localStorage.removeItem("userId");
-                localStorage.removeItem("role");
                 window.location.href = "/login";
+                return Promise.reject(err);
             }
         }
-
         return Promise.reject(error);
     }
 );

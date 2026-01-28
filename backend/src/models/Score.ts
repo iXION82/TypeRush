@@ -11,7 +11,7 @@ const ScoreSchema = new Schema({
     scoreValue: { type: Number, required: true },
     netWPM: { type: Number, required: true },
     accuracy: { type: Number, required: true },
-    userId: { type: Schema.Types.ObjectId, ref: 'Project' }
+    userId: { type: Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
 export default mongoose.model<IScore>('Score', ScoreSchema);

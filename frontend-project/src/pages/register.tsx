@@ -7,7 +7,7 @@ import { Mail, Lock, Eye, EyeOff, User, ArrowRight } from 'lucide-react';
 const RegisterPage = () => {
 
     const navigate = useNavigate();
-    const [username, setUsername] = useState('');
+    const [name, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -28,7 +28,7 @@ const RegisterPage = () => {
             setIsLoading(true);
 
             const res = await api.post("/auth/register", {
-                username,
+                name,
                 email,
                 password
             });
@@ -104,7 +104,7 @@ const RegisterPage = () => {
                             </div>
                             <input
                                 type="text"
-                                value={username}
+                                value={name}
                                 onChange={(e) => setUsername(e.target.value)}
                                 className="
                                     w-full 
