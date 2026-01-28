@@ -7,11 +7,11 @@ export interface IScore extends Document {
     userId: mongoose.Types.ObjectId;
 }
 
-const UserSchema = new Schema({
+const ScoreSchema = new Schema({
     value: { type: Number, required: true },
     netWPM: { type: Number, required: true },
     accuracy: { type: Number, required: true },
     userId: { type: Schema.Types.ObjectId, ref: 'Project' }
 }, { timestamps: true });
 
-export default mongoose.model<IScore>('User', UserSchema);
+export default mongoose.model<IScore>('Score', ScoreSchema);
