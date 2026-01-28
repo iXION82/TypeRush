@@ -1,6 +1,7 @@
-import { useMemo, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useMemo, useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { TypingNavbar } from "./typingNavbar";
-
+import type { ScorePayload } from "../types/type";
+import { createScoreAndUpdateUser } from "../controller/ScoreCreate";
 type Mode = "time" | "words" | "zen";
 type Level = 1 | 2 | 3 | null;
 type State = "idle" | "playing" | "end";
@@ -94,7 +95,7 @@ export function TypingBox() {
     const startGameTimer = () => {
         clearTimer();
         setState("playing");
-        
+
         timerIntervalRef.current = setInterval(() => {
             setTimer(prev => {
                 if (prev <= 1) {
@@ -117,12 +118,12 @@ export function TypingBox() {
         clearTimer();
         setTimer(0);
         setState("playing");
-        
+
         timerIntervalRef.current = setInterval(() => {
 
             setTimer(prev => prev + 1);
         }, 1000);
-    };    
+    };
     const restartGame = () => {
         clearTimer();
         setState("idle");
@@ -133,52 +134,58 @@ export function TypingBox() {
             correctChar: 0,
             incorrectChar: 0
         });
-        
-        if(mode === "time"){
-            if(level === 1) setTimer(30);
-            if(level === 2) setTimer(60);
-            if(level === 3) setTimer(120);
+
+        if (mode === "time") {
+            if (level === 1) setTimer(30);
+            if (level === 2) setTimer(60);
+            if (level === 3) setTimer(120);
         } else {
             setTimer(0);
         }
     };
 
-    const difficultyMultiplier = () => {
+    const difficultyMultiplier = useCallback(() => {
         let temp = 1;
         if (punctuation) temp += 0.5;
         if (numbers) temp += 0.5;
         return temp;
-    };
+    }, [punctuation, numbers]);
 
-    const getTimeElapsed = () => {
+
+    const getTimeElapsed = useCallback(() => {
         if (mode === "time") {
             if (level === 1) return 30;
             if (level === 2) return 60;
             if (level === 3) return 120;
             return 60;
-        } 
-        return timer; 
-    };
+        }
+        return timer;
+    }, [mode, level, timer]);
 
-    const calculateStats = () => {
-        const timeElapsed = Math.max(1, getTimeElapsed());
-        const minutes = timeElapsed / 60;
-        const totalChars = stats.correctChar + stats.incorrectChar;
-        
-        const gross = (totalChars / 5) / minutes;
-        const net = (stats.correctChar / 5) / minutes;
-        const accuracy = totalChars === 0 ? 100 : (stats.correctChar / totalChars) * 100;
-        
-        const scoreVal = Math.ceil(net * (accuracy / 100) * difficultyMultiplier());
 
-        return {
-            gross: gross.toFixed(0),
-            net: net.toFixed(0),
-            accuracy: accuracy.toFixed(2),
-            time: timeElapsed,
-            score: scoreVal
-        };
+    const calculateStats = useCallback(() => {
+    const timeElapsed = Math.max(1, getTimeElapsed());
+    const minutes = timeElapsed / 60;
+    const totalChars = stats.correctChar + stats.incorrectChar;
+
+    const gross = (totalChars / 5) / minutes;
+    const net = (stats.correctChar / 5) / minutes;
+    const accuracy =
+        totalChars === 0 ? 100 : (stats.correctChar / totalChars) * 100;
+
+    const scoreVal = Math.ceil(net * (accuracy / 100) * difficultyMultiplier());
+
+    return {
+        gross: gross.toFixed(0),
+        net: net.toFixed(0),
+        accuracy: accuracy.toFixed(2),
+        time: timeElapsed,
+        score: scoreVal,
     };
+    }, [stats, getTimeElapsed, difficultyMultiplier]);
+
+
+
 
     useEffect(() => {
         if (state === "end" || state === "idle") {
@@ -193,9 +200,28 @@ export function TypingBox() {
     }, []);
 
     useEffect(() => {
+        if (state !== "end") return;
+
+        const userId = localStorage.getItem("userId");
+        if (!userId) return;
+
+        const result = calculateStats();
+
+        const payload: ScorePayload = {
+            scoreValue: result.score,
+            accuracy: Number(result.accuracy),
+            netWPM: Number(result.net),
+            userId,
+        };
+
+        createScoreAndUpdateUser(payload);
+    }, [state, calculateStats]);
+
+
+    useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key.length > 1 && e.key !== "Backspace" && e.key !== " ") return;
-            
+
             if (state === "idle") {
                 if (mode === "time") {
                     startGameTimer();
@@ -231,17 +257,17 @@ export function TypingBox() {
 
             if (e.key === " ") {
                 if (currentLetterIdx === 0 && currentTyped === "") return;
-                
+
                 const updated = [...typedWords];
-                updated[currentWordIdx] = currentTyped; 
+                updated[currentWordIdx] = currentTyped;
                 setTypedWords(updated);
 
                 if (mode === "words") {
-                     const limit = getWordLimit();
-                     if (currentWordIdx + 1 >= limit) {
-                         setState("end");
-                         return;
-                     }
+                    const limit = getWordLimit();
+                    if (currentWordIdx + 1 >= limit) {
+                        setState("end");
+                        return;
+                    }
                 }
 
                 setCurrentWordIdx((i) => i + 1);
