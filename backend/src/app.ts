@@ -1,5 +1,6 @@
 import express from "express";
 import healthRoute from "./routes/health.route.js";
+import authRoutes from "./routes/auth.route.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
@@ -12,5 +13,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
 app.use("/api", healthRoute);
+app.use("/api/auth", authRoutes);
+
+
 export default app;
