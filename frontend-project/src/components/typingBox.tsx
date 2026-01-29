@@ -50,12 +50,12 @@ export function TypingBox() {
         return "text-zinc-400";
     };
 
-    const clearTimer = () => {
+    const clearTimer = useCallback(() => {
         if (timerIntervalRef.current) {
             clearInterval(timerIntervalRef.current);
             timerIntervalRef.current = null;
         }
-    };
+    }, []);
 
     useLayoutEffect(() => {
         const caret = caretRef.current;
@@ -92,7 +92,7 @@ export function TypingBox() {
 
     }, [currentWordIdx, currentLetterIdx, typedWords]);
 
-    const startGameTimer = () => {
+    const startGameTimer = useCallback(() => {
         clearTimer();
         setState("playing");
 
@@ -106,15 +106,15 @@ export function TypingBox() {
                 return prev - 1;
             });
         }, 1000);
-    };
+    }, [clearTimer]);
 
-    const getWordLimit = () => {
+    const getWordLimit = useCallback(() => {
         if (level === 1) return 25;
         if (level === 2) return 50;
         return 100;
-    };
+    }, [level]);
 
-    const startGameWords = () => {
+    const startGameWords = useCallback(() => {
         clearTimer();
         setTimer(0);
         setState("playing");
@@ -123,7 +123,7 @@ export function TypingBox() {
 
             setTimer(prev => prev + 1);
         }, 1000);
-    };
+    }, [clearTimer]);
     const restartGame = () => {
         clearTimer();
         setState("idle");
@@ -164,24 +164,24 @@ export function TypingBox() {
 
 
     const calculateStats = useCallback(() => {
-    const timeElapsed = Math.max(1, getTimeElapsed());
-    const minutes = timeElapsed / 60;
-    const totalChars = stats.correctChar + stats.incorrectChar;
+        const timeElapsed = Math.max(1, getTimeElapsed());
+        const minutes = timeElapsed / 60;
+        const totalChars = stats.correctChar + stats.incorrectChar;
 
-    const gross = (totalChars / 5) / minutes;
-    const net = (stats.correctChar / 5) / minutes;
-    const accuracy =
-        totalChars === 0 ? 100 : (stats.correctChar / totalChars) * 100;
+        const gross = (totalChars / 5) / minutes;
+        const net = (stats.correctChar / 5) / minutes;
+        const accuracy =
+            totalChars === 0 ? 100 : (stats.correctChar / totalChars) * 100;
 
-    const scoreVal = Math.ceil(net * (accuracy / 100) * difficultyMultiplier());
+        const scoreVal = Math.ceil(net * (accuracy / 100) * difficultyMultiplier());
 
-    return {
-        gross: gross.toFixed(0),
-        net: net.toFixed(0),
-        accuracy: accuracy.toFixed(2),
-        time: timeElapsed,
-        score: scoreVal,
-    };
+        return {
+            gross: gross.toFixed(0),
+            net: net.toFixed(0),
+            accuracy: accuracy.toFixed(2),
+            time: timeElapsed,
+            score: scoreVal,
+        };
     }, [stats, getTimeElapsed, difficultyMultiplier]);
 
 
@@ -191,13 +191,13 @@ export function TypingBox() {
         if (state === "end" || state === "idle") {
             clearTimer();
         }
-    }, [state]);
+    }, [state, clearTimer]);
 
     useEffect(() => {
         return () => {
             clearTimer();
         };
-    }, []);
+    }, [clearTimer]);
 
     useEffect(() => {
         if (state !== "end") return;
@@ -302,8 +302,7 @@ export function TypingBox() {
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [currentLetterIdx, currentWordIdx, typedWords, words, state, mode, level]);
-
+    }, [currentLetterIdx, currentWordIdx, typedWords, words, state, mode, level, startGameTimer, startGameWords, getWordLimit]);
     const results = state === "end" ? calculateStats() : null;
 
     return (
