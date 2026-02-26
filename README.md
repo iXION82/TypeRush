@@ -1,4 +1,4 @@
-# Trivalent (TypeRush)
+TypeRush
 
 A full-stack typing speed test application built with React, TypeScript, Node.js, and MongoDB.
 
