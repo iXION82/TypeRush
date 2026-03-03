@@ -237,7 +237,7 @@ export function SpaceBackground() {
 
             for (const group of constellationsRef.current) {
                 ctx.beginPath();
-                ctx.strokeStyle = "rgba(180, 200, 230, 0.08)";
+                ctx.strokeStyle = "rgba(180, 200, 230, 0.15)";
                 ctx.lineWidth = 0.5;
                 for (const line of group) {
                     const s1 = stars[line.from];
@@ -249,6 +249,8 @@ export function SpaceBackground() {
                 }
                 ctx.stroke();
             }
+
+            const nearbyStars: { sx: number; sy: number; dist: number; color: string }[] = [];
 
             for (const star of stars) {
                 const sx = star.x;
@@ -265,6 +267,7 @@ export function SpaceBackground() {
                 let glowBoost = 0;
                 if (dist < GLOW_RADIUS) {
                     glowBoost = (1 - dist / GLOW_RADIUS) * 0.6;
+                    nearbyStars.push({ sx, sy, dist, color: star.color });
                 }
 
                 const finalAlpha = Math.min(1, star.alpha + glowBoost);
@@ -286,6 +289,20 @@ export function SpaceBackground() {
                 ctx.arc(sx, sy, finalRadius, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(${star.color}, ${finalAlpha})`;
                 ctx.fill();
+            }
+
+            // Draw faint lines from cursor to nearby stars
+            for (const ns of nearbyStars) {
+                const lineAlpha = (1 - ns.dist / GLOW_RADIUS) * 0.2;
+                const lineGrad = ctx.createLinearGradient(mx, my, ns.sx, ns.sy);
+                lineGrad.addColorStop(0, `rgba(${ns.color}, ${lineAlpha * 0.6})`);
+                lineGrad.addColorStop(1, `rgba(${ns.color}, ${lineAlpha})`);
+                ctx.beginPath();
+                ctx.strokeStyle = lineGrad;
+                ctx.lineWidth = 0.6;
+                ctx.moveTo(mx, my);
+                ctx.lineTo(ns.sx, ns.sy);
+                ctx.stroke();
             }
 
             if (timestamp - lastShootingRef.current > nextShootingDelay.current) {
