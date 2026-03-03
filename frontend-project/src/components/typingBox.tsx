@@ -2,13 +2,15 @@ import { useMemo, useEffect, useLayoutEffect, useRef, useState, useCallback } fr
 import { TypingNavbar } from "./typingNavbar";
 import type { ScorePayload } from "../types/type";
 import { createScoreAndUpdateUser } from "../controller/ScoreCreate";
+import { fetchText } from "../controller/TextFetch";
 type Mode = "time" | "words" | "zen";
 type Level = 1 | 2 | 3 | null;
 type State = "idle" | "playing" | "end";
 
 export function TypingBox() {
-    const text = "The quiet river reflected broken stars as bicycles whispered past sleeping shops and paper signs curled in doorways while a baker laughed alone birds shifted on wires and a stray dog followed footsteps patiently believing dawn would arrive soon carrying bread warmth stories and the soft courage needed to begin again without maps promises or fear under pale skies where minutes stretched kindly listeners learned to breathe slowly walk lightly trust silence memory chance rhythm time forward together tonight softly";
-    const words = useMemo(() => text.split(" "), []);
+    const [text, setText] = useState("Loading...");
+    const [fetchTrigger, setFetchTrigger] = useState(0);
+    const words = useMemo(() => text.split(" "), [text]);
 
     const [currentWordIdx, setCurrentWordIdx] = useState(0);
     const [currentLetterIdx, setCurrentLetterIdx] = useState(0);
@@ -142,6 +144,7 @@ export function TypingBox() {
         } else {
             setTimer(0);
         }
+        setFetchTrigger(prev => prev + 1);
     };
 
     const difficultyMultiplier = useCallback(() => {
@@ -150,6 +153,25 @@ export function TypingBox() {
         if (numbers) temp += 0.5;
         return temp;
     }, [punctuation, numbers]);
+
+    useEffect(() => {
+        const loadText = async () => {
+            let totalCount = 10000;
+            if(mode === 'time'){
+                totalCount=650;
+            }else if(mode === 'words'){
+                totalCount = level === 1 ? 25 : level === 2 ? 50 : 100;
+            }
+            const newText = await fetchText({
+                mode,
+                count: totalCount,
+                numbers,
+                punctuation
+            });
+            setText(newText);
+        };
+        loadText();
+    }, [mode, level, numbers, punctuation, fetchTrigger]);
 
 
     const getTimeElapsed = useCallback(() => {
