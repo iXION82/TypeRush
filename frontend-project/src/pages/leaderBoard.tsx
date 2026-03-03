@@ -29,7 +29,7 @@ const LeaderboardPage = () => {
                 { id: '10', username: 'junior_dev', wpm: 88, accuracy: 92.5, date: '2023-12-10' },
             ];
             setTimeout(() => {
-                setScores(mockData);  
+                setScores(mockData);
                 setIsLoading(false);
             }, 1000);
         };
@@ -52,7 +52,7 @@ const LeaderboardPage = () => {
     };
 
     return (
-        <div className="flex items-center justify-center w-full min-h-screen bg-black/50 p-4 font-mono">
+        <div className="flex items-center justify-center w-full min-h-screen bg-transparent p-4 font-mono">
             <div className="
                 w-full 
                 max-w-3xl 
@@ -101,9 +101,9 @@ const LeaderboardPage = () => {
 
                         {scores.slice(0, 10).map((score, index) => {
                             const style = getRankStyle(index);
-                            
+
                             return (
-                                <div 
+                                <div
                                     key={score.id}
                                     className={`
                                         grid grid-cols-12 items-center 
@@ -152,7 +152,7 @@ const LeaderboardPage = () => {
                         </div>
                         <p className="text-lg font-medium text-zinc-400">No scores recorded yet</p>
                         <p className="text-sm">Be the first to claim the throne.</p>
-                        
+
                         <button className="mt-6 px-6 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm transition-all border border-zinc-700">
                             Start Typing Test
                         </button>

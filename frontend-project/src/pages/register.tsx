@@ -39,7 +39,7 @@ const RegisterPage = () => {
 
             navigate("/");
 
-        }catch (err: unknown) {
+        } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
             } else if (
@@ -62,7 +62,7 @@ const RegisterPage = () => {
     };
 
     return (
-        <div className="flex items-center justify-center w-full min-h-screen bg-black/50 p-4">
+        <div className="flex items-center justify-center w-full min-h-screen bg-transparent p-4">
             <div className="
                 w-full 
                 max-w-md 
@@ -90,10 +90,10 @@ const RegisterPage = () => {
 
                 <form onSubmit={handleRegister} className="space-y-5 relative z-10">
                     {error && (
-                            <div className="text-red-400 text-sm bg-red-500/10 p-2 rounded">
-                                {error}
-                            </div>
-                        )}
+                        <div className="text-red-400 text-sm bg-red-500/10 p-2 rounded">
+                            {error}
+                        </div>
+                    )}
                     <div className="space-y-1">
                         <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1">
                             Username
@@ -200,7 +200,7 @@ const RegisterPage = () => {
                         </div>
                     </div>
 
-                     <div className="space-y-1">
+                    <div className="space-y-1">
                         <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1">
                             Confirm Password
                         </label>

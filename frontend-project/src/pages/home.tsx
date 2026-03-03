@@ -6,10 +6,7 @@ export function Home() {
         <div className="
             min-h-screen
             flex flex-col
-            bg-linear-to-br
-            from-neutral-950
-            via-zinc-900
-            to-black
+            bg-transparent
             text-gray-200">
             <Navbar />
 

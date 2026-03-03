@@ -27,16 +27,16 @@ const LoginPage = () => {
             setAccessToken(accessToken);
             localStorage.setItem("userId", user._id);
             navigate("/home");
-        }catch(err) {
+        } catch (err) {
             const error = err as AxiosError<{ message: string }>;
             setError(error.response?.data?.message || "Login failed");
-        }finally{
+        } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="flex items-center justify-center w-full min-h-screen bg-black/50 p-4">
+        <div className="flex items-center justify-center w-full min-h-screen bg-transparent p-4">
             <div className="
                 w-full 
                 max-w-md 
@@ -63,12 +63,12 @@ const LoginPage = () => {
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6 relative z-10">
-                    
+
                     {error && (
-                            <div className="text-red-400 text-sm bg-red-500/10 p-2 rounded">
-                                {error}
-                            </div>
-                        )}
+                        <div className="text-red-400 text-sm bg-red-500/10 p-2 rounded">
+                            {error}
+                        </div>
+                    )}
                     <div className="space-y-2">
                         <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1">
                             Email
@@ -96,7 +96,7 @@ const LoginPage = () => {
                                     transition-all 
                                     duration-200"
                                 placeholder="user@example.com"
-                                required/>
+                                required />
                         </div>
                     </div>
 
@@ -133,7 +133,7 @@ const LoginPage = () => {
                                     transition-all 
                                     duration-200"
                                 placeholder="••••••••"
-                                required/>
+                                required />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
