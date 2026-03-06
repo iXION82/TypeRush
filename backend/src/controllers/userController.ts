@@ -3,7 +3,7 @@ import User from '../models/User.js';
 
 export const updateUser = async (req: Request, res: Response) => {
     try {
-        const { scoreIds, exp, totalCharsTyped, totalTimeTyped, gamesPlayed, level, avaPic } = req.body;
+        const { scoreIds, exp, totalCharsTyped, totalTimeTyped, gamesPlayed, level, avaPic, name } = req.body;
 
         const updateOps: Record<string, any> = {};
 
@@ -24,6 +24,8 @@ export const updateUser = async (req: Request, res: Response) => {
         const setFields: Record<string, any> = {};
         if (level != null) setFields.level = level;
         if (avaPic != null) setFields.avaPic = avaPic;
+        const nameVal: string | undefined = name as string | undefined;
+        if (nameVal != null && nameVal.trim() !== '') setFields.name = nameVal.trim();
 
         if (Object.keys(setFields).length > 0) {
             updateOps.$set = setFields;

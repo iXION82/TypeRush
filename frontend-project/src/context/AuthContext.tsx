@@ -48,11 +48,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const newToken = refreshRes.data.accessToken;
                 setAccessToken(newToken);
 
-                // Now fetch the full profile with the fresh token
                 const profileRes = await api.get(`/user/${userId}/profile`);
                 setUser(profileRes.data);
             } catch {
-                // Refresh cookie expired or invalid — clear everything
                 setUser(null);
                 localStorage.removeItem('userId');
             }

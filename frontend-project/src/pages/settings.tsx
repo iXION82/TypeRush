@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { Navbar } from '../components/navbar';
 import {
     User, Palette, KeyboardIcon, ChevronRight,
-    Mail, Save, Check, Monitor, Sparkles, Type,
-    Gauge, Target, MousePointer, Volume2
+    Save, Check, Monitor, Sparkles, Type,
+    Gauge, Target, MousePointer, Volume2, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettings, getAvatarPath, AVATAR_COUNT } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 import type { ThemeOption, FontSize, CaretStyle } from '../context/SettingsContext';
+import api from '../api/api';
 
 type Tab = 'profile' | 'theme' | 'typing';
 
@@ -77,12 +79,36 @@ const themeOptions: { key: ThemeOption; label: string; colors: string[] }[] = [
 
 const SettingsPage = () => {
     const { settings, updateSettings } = useSettings();
+    const { user, refreshProfile } = useAuth();
     const [activeTab, setActiveTab] = useState<Tab>('profile');
-    const [profileSaved, setProfileSaved] = useState(false);
 
-    const handleProfileSave = () => {
-        setProfileSaved(true);
-        setTimeout(() => setProfileSaved(false), 2000);
+    // Profile edit state — seeded from AuthContext user
+    const [username, setUsername] = useState(user?.name ?? '');
+    const [selectedAvatar, setSelectedAvatar] = useState(user?.avaPic ?? 1);
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+    const [errorMsg, setErrorMsg] = useState('');
+
+    const handleProfileSave = async () => {
+        if (!user) return;
+        if (!username.trim()) {
+            setErrorMsg('Username cannot be empty');
+            return;
+        }
+        setSaveStatus('saving');
+        setErrorMsg('');
+        try {
+            await api.patch(`/user/${user._id}`, {
+                name: username.trim(),
+                avaPic: selectedAvatar,
+            });
+            await refreshProfile();
+            setSaveStatus('saved');
+            setTimeout(() => setSaveStatus('idle'), 2000);
+        } catch {
+            setSaveStatus('error');
+            setErrorMsg('Failed to save. Please try again.');
+            setTimeout(() => setSaveStatus('idle'), 3000);
+        }
     };
 
     const renderProfile = () => (
@@ -99,6 +125,14 @@ const SettingsPage = () => {
                 <p className="text-sm text-zinc-500">Manage your account details</p>
             </div>
 
+            {!user && (
+                <div className="flex items-center gap-2 text-sm text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    You must be logged in to edit your profile.
+                </div>
+            )}
+
+            {/* Current avatar preview */}
             <div className="flex items-center gap-5 py-4">
                 <div className="
                     w-20 h-20 rounded-2xl
@@ -108,21 +142,22 @@ const SettingsPage = () => {
                     bg-zinc-800/50
                 ">
                     <img
-                        src={getAvatarPath(settings.avatar)}
+                        src={getAvatarPath(selectedAvatar)}
                         alt="Your avatar"
                         className="w-full h-full object-cover"
                     />
                 </div>
                 <div>
                     <div className="text-lg font-semibold text-zinc-200">
-                        {settings.username || 'Anonymous'}
+                        {username || user?.name || 'Anonymous'}
                     </div>
                     <div className="text-sm text-zinc-500 mt-0.5">
-                        {settings.email || 'No email set'}
+                        {user?.email || 'Not logged in'}
                     </div>
                 </div>
             </div>
 
+            {/* Avatar picker */}
             <div>
                 <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1 mb-3 block">
                     Choose Avatar
@@ -131,11 +166,11 @@ const SettingsPage = () => {
                     {Array.from({ length: AVATAR_COUNT }, (_, i) => i + 1).map((num) => (
                         <button
                             key={num}
-                            onClick={() => updateSettings({ avatar: num })}
+                            onClick={() => setSelectedAvatar(num)}
                             className={`
                                 relative rounded-xl overflow-hidden aspect-square
                                 transition-all duration-200 cursor-pointer
-                                ${settings.avatar === num
+                                ${selectedAvatar === num
                                     ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-zinc-900 scale-105 shadow-lg shadow-amber-500/20'
                                     : 'ring-1 ring-zinc-700/50 hover:ring-zinc-500/50 hover:scale-105 opacity-70 hover:opacity-100'}
                             `}
@@ -145,7 +180,7 @@ const SettingsPage = () => {
                                 alt={`Avatar ${num}`}
                                 className="w-full h-full object-cover"
                             />
-                            {settings.avatar === num && (
+                            {selectedAvatar === num && (
                                 <motion.div
                                     layoutId="avatar-check"
                                     className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center shadow-md"
@@ -160,72 +195,65 @@ const SettingsPage = () => {
 
             <div className="w-full h-px bg-zinc-800/80" />
 
-            <div className="space-y-5">
-                <div className="space-y-2">
-                    <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1">
-                        Username
-                    </label>
-                    <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <User className="h-4 w-4 text-zinc-500 group-focus-within:text-amber-400 transition-colors" />
-                        </div>
-                        <input
-                            type="text"
-                            value={settings.username}
-                            onChange={(e) => updateSettings({ username: e.target.value })}
-                            className="
-                                w-full
-                                bg-zinc-800/50
-                                border border-zinc-700/50
-                                text-zinc-200
-                                text-sm
-                                rounded-xl
-                                pl-12 pr-4 py-3.5
-                                outline-none
-                                focus:border-amber-500/50
-                                focus:ring-1 focus:ring-amber-500/50
-                                placeholder:text-zinc-600
-                                transition-all
-                                duration-200"
-                            placeholder="Enter your username"
-                        />
+            {/* Username field */}
+            <div className="space-y-2">
+                <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1">
+                    Username
+                </label>
+                <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <User className="h-4 w-4 text-zinc-500 group-focus-within:text-amber-400 transition-colors" />
                     </div>
-                </div>
-
-                <div className="space-y-2">
-                    <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1">
-                        Email
-                    </label>
-                    <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Mail className="h-4 w-4 text-zinc-500 group-focus-within:text-amber-400 transition-colors" />
-                        </div>
-                        <input
-                            type="email"
-                            value={settings.email}
-                            onChange={(e) => updateSettings({ email: e.target.value })}
-                            className="
-                                w-full
-                                bg-zinc-800/50
-                                border border-zinc-700/50
-                                text-zinc-200
-                                text-sm
-                                rounded-xl
-                                pl-12 pr-4 py-3.5
-                                outline-none
-                                focus:border-amber-500/50
-                                focus:ring-1 focus:ring-amber-500/50
-                                placeholder:text-zinc-600
-                                transition-all
-                                duration-200"
-                            placeholder="user@example.com"
-                        />
-                    </div>
+                    <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        disabled={!user}
+                        className="
+                            w-full
+                            bg-zinc-800/50
+                            border border-zinc-700/50
+                            text-zinc-200
+                            text-sm
+                            rounded-xl
+                            pl-12 pr-4 py-3.5
+                            outline-none
+                            focus:border-amber-500/50
+                            focus:ring-1 focus:ring-amber-500/50
+                            placeholder:text-zinc-600
+                            transition-all
+                            duration-200
+                            disabled:opacity-40 disabled:cursor-not-allowed"
+                        placeholder="Enter your username"
+                    />
                 </div>
             </div>
 
+            {/* Email — read-only display */}
+            <div className="space-y-2">
+                <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1">
+                    Email <span className="normal-case text-zinc-600 ml-1">(cannot be changed)</span>
+                </label>
+                <div className="
+                    w-full px-4 py-3.5 rounded-xl
+                    bg-zinc-800/30 border border-zinc-700/30
+                    text-zinc-500 text-sm
+                    select-none
+                ">
+                    {user?.email ?? '—'}
+                </div>
+            </div>
+
+            {errorMsg && (
+                <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    {errorMsg}
+                </div>
+            )}
+
             <button
                 onClick={handleProfileSave}
+                disabled={!user || saveStatus === 'saving'}
                 className="
                     flex items-center gap-2
                     px-6 py-3 rounded-xl
@@ -235,16 +263,15 @@ const SettingsPage = () => {
                     transition-all
                     shadow-lg shadow-amber-500/20
                     mt-2
+                    disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100
                 "
             >
-                {profileSaved ? (
-                    <>
-                        <Check className="w-4 h-4" /> Saved!
-                    </>
+                {saveStatus === 'saving' ? (
+                    <span className="animate-pulse">Saving…</span>
+                ) : saveStatus === 'saved' ? (
+                    <><Check className="w-4 h-4" /> Saved!</>
                 ) : (
-                    <>
-                        <Save className="w-4 h-4" /> Save Changes
-                    </>
+                    <><Save className="w-4 h-4" /> Save Changes</>
                 )}
             </button>
         </motion.div>
@@ -476,11 +503,9 @@ const SettingsPage = () => {
                     relative
                     overflow-hidden
                 ">
-  
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-amber-500/10 rounded-full blur-[80px] pointer-events-none" />
 
                     <div className="flex flex-col md:flex-row gap-8 relative z-10">
-                       
                         <div className="md:w-56 shrink-0">
                             <h1 className="text-2xl font-bold text-zinc-100 mb-6 flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
