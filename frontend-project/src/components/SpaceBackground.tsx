@@ -18,6 +18,11 @@ interface ConstellationLine {
     to: number;
 }
 
+interface ConstellationGroup {
+    lines: ConstellationLine[];
+    alpha: number;
+}
+
 interface ShootingStar {
     x: number;
     y: number;
@@ -70,51 +75,47 @@ function createStars(width: number, height: number): Star[] {
     return stars;
 }
 
-function createConstellations(stars: Star[]): ConstellationLine[][] {
+const MAX_LINK_DIST = 120;
+const MAX_CONSTELLATIONS = 10;
+const CONSTELLATION_SPAWN_MIN = 3000;
+const CONSTELLATION_SPAWN_MAX = 6000;
+
+function spawnOneConstellation(stars: Star[], usedIndices: Set<number>): ConstellationGroup | null {
     const brightStars = stars
         .map((s, i) => ({ ...s, idx: i }))
-        .filter(s => s.radius > 0.7);
+        .filter(s => s.radius > 0.6 && !usedIndices.has(s.idx));
 
-    const constellations: ConstellationLine[][] = [];
-    const used = new Set<number>();
+    if (brightStars.length < 4) return null;
 
-    for (let c = 0; c < 4 && brightStars.length > 0; c++) {
-        const available = brightStars.filter(s => !used.has(s.idx));
-        if (available.length < 3) break;
+    const seed = brightStars[Math.floor(Math.random() * brightStars.length)];
+    const chain = [seed];
+    usedIndices.add(seed.idx);
 
-        const seed = available[Math.floor(Math.random() * available.length)];
-        const group = [seed];
-        used.add(seed.idx);
+    const chainLen = Math.floor(randomBetween(4, 6));
+    for (let i = 1; i < chainLen; i++) {
+        const last = chain[chain.length - 1];
+        const candidates = brightStars
+            .filter(s => !usedIndices.has(s.idx))
+            .map(s => ({ ...s, dist: Math.hypot(s.x - last.x, s.y - last.y) }))
+            .filter(s => s.dist < MAX_LINK_DIST && s.dist > 15)
+            .sort((a, b) => a.dist - b.dist);
 
-        const starCount = Math.floor(randomBetween(3, 6));
-        for (let i = 1; i < starCount; i++) {
-            const last = group[group.length - 1];
-            const closest = available
-                .filter(s => !used.has(s.idx))
-                .map(s => ({
-                    ...s,
-                    dist: Math.hypot(s.x - last.x, s.y - last.y),
-                }))
-                .filter(s => s.dist < 300 && s.dist > 30)
-                .sort((a, b) => a.dist - b.dist);
-
-            if (closest.length === 0) break;
-            const pick = closest[Math.floor(Math.random() * Math.min(3, closest.length))];
-            group.push(pick);
-            used.add(pick.idx);
-        }
-
-        const lines: ConstellationLine[] = [];
-        for (let i = 0; i < group.length - 1; i++) {
-            lines.push({ from: group[i].idx, to: group[i + 1].idx });
-        }
-        if (group.length > 3 && Math.random() > 0.5) {
-            lines.push({ from: group[group.length - 1].idx, to: group[0].idx });
-        }
-        constellations.push(lines);
+        if (candidates.length === 0) break;
+        const pick = candidates[0];
+        chain.push(pick);
+        usedIndices.add(pick.idx);
     }
 
-    return constellations;
+    if (chain.length < 3) return null;
+
+    const lines: ConstellationLine[] = [];
+    for (let i = 0; i < chain.length - 1; i++) {
+        lines.push({ from: chain[i].idx, to: chain[i + 1].idx });
+    }
+    // Close the shape
+    lines.push({ from: chain[chain.length - 1].idx, to: chain[0].idx });
+
+    return { lines, alpha: 0 };
 }
 
 export function SpaceBackground() {
@@ -123,12 +124,17 @@ export function SpaceBackground() {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const starsRef = useRef<Star[]>([]);
-    const constellationsRef = useRef<ConstellationLine[][]>([]);
+    const constellationsRef = useRef<ConstellationGroup[]>([]);
+    const usedStarIndicesRef = useRef<Set<number>>(new Set());
     const mouseRef = useRef({ x: -9999, y: -9999, active: false });
     const smoothMouseRef = useRef({ x: -9999, y: -9999 });
     const shootingStarsRef = useRef<ShootingStar[]>([]);
     const animFrameRef = useRef<number>(0);
     const lastShootingRef = useRef(0);
+    const lastConstellationRef = useRef(0);
+    const nextConstellationDelay = useRef(
+        randomBetween(CONSTELLATION_SPAWN_MIN, CONSTELLATION_SPAWN_MAX)
+    );
     const scrollOffsetRef = useRef(0);
     const fieldHeightRef = useRef(0);
     const nextShootingDelay = useRef(
@@ -156,8 +162,15 @@ export function SpaceBackground() {
 
         fieldHeightRef.current = h * 2;
         starsRef.current = createStars(w, h);
-        constellationsRef.current = createConstellations(starsRef.current);
+        usedStarIndicesRef.current = new Set();
+        constellationsRef.current = [];
+        // Spawn 2 initial constellations
+        for (let i = 0; i < 2; i++) {
+            const group = spawnOneConstellation(starsRef.current, usedStarIndicesRef.current);
+            if (group) constellationsRef.current.push(group);
+        }
         scrollOffsetRef.current = 0;
+        lastConstellationRef.current = 0;
     }, []);
 
     useEffect(() => {
@@ -209,6 +222,16 @@ export function SpaceBackground() {
             }
             const scrollY = scrollOffsetRef.current;
 
+            // Periodically spawn new constellations
+            if (timestamp - lastConstellationRef.current > nextConstellationDelay.current) {
+                lastConstellationRef.current = timestamp;
+                nextConstellationDelay.current = randomBetween(CONSTELLATION_SPAWN_MIN, CONSTELLATION_SPAWN_MAX);
+                if (constellationsRef.current.length < MAX_CONSTELLATIONS) {
+                    const group = spawnOneConstellation(starsRef.current, usedStarIndicesRef.current);
+                    if (group) constellationsRef.current.push(group);
+                }
+            }
+
             ctx.clearRect(0, 0, w, h);
 
             // Theme-driven background gradient
@@ -249,16 +272,29 @@ export function SpaceBackground() {
                 return sy;
             };
 
-            // Theme-driven constellation lines
+            // Theme-driven constellation lines with slow fade-in
             for (const group of constellationsRef.current) {
+                // Slowly fade in the constellation
+                if (group.alpha < 1) {
+                    group.alpha = Math.min(1, group.alpha + 0.004);
+                }
+
+                // Parse the base constellation color and apply group alpha
+                const baseColor = currentTheme.constellationColor;
+                const alphaMatch = baseColor.match(/([\d.]+)\)$/);
+                const baseAlpha = alphaMatch ? parseFloat(alphaMatch[1]) : 0.15;
+                const finalAlpha = baseAlpha * group.alpha;
+
                 ctx.beginPath();
-                ctx.strokeStyle = currentTheme.constellationColor;
+                ctx.strokeStyle = baseColor.replace(/[\d.]+\)$/, `${finalAlpha.toFixed(3)})`);
                 ctx.lineWidth = 0.5;
-                for (const line of group) {
+                for (const line of group.lines) {
                     const s1 = stars[line.from];
                     const s2 = stars[line.to];
                     const y1 = getWrappedY(s1.y);
                     const y2 = getWrappedY(s2.y);
+                    // Skip lines where stars are on opposite sides of the scroll wrap
+                    if (Math.abs(y1 - y2) > h * 0.5) continue;
                     ctx.moveTo(s1.x, y1);
                     ctx.lineTo(s2.x, y2);
                 }
