@@ -3,11 +3,13 @@ import { TypingNavbar } from "./typingNavbar";
 import type { ScorePayload } from "../types/type";
 import { createScoreAndUpdateUser } from "../controller/ScoreCreate";
 import { fetchText } from "../controller/TextFetch";
+import { useAuth } from "../context/AuthContext";
 type Mode = "time" | "words" | "zen";
 type Level = 1 | 2 | 3 | null;
 type State = "idle" | "playing" | "end";
 
 export function TypingBox() {
+    const { refreshProfile } = useAuth();
     const [text, setText] = useState("Loading...");
     const [fetchTrigger, setFetchTrigger] = useState(0);
     const words = useMemo(() => text.split(" "), [text]);
@@ -30,8 +32,10 @@ export function TypingBox() {
     const letterRefs = useRef<HTMLSpanElement[][]>([]);
     const caretRef = useRef<HTMLSpanElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-
     const timerIntervalRef = useRef<number | null>(null);
+    // Guard: only submit score once per completed game
+    const scoreSubmittedRef = useRef(false);
+
 
     const getWordClass = (wordIdx: number) => {
         if (wordIdx < currentWordIdx) return "opacity-60";
@@ -136,6 +140,8 @@ export function TypingBox() {
             correctChar: 0,
             incorrectChar: 0
         });
+        // Allow next game to submit its score
+        scoreSubmittedRef.current = false;
 
         if (mode === "time") {
             if (level === 1) setTimer(30);
@@ -157,9 +163,9 @@ export function TypingBox() {
     useEffect(() => {
         const loadText = async () => {
             let totalCount = 10000;
-            if(mode === 'time'){
-                totalCount=650;
-            }else if(mode === 'words'){
+            if (mode === 'time') {
+                totalCount = 650;
+            } else if (mode === 'words') {
                 totalCount = level === 1 ? 25 : level === 2 ? 50 : 100;
             }
             const newText = await fetchText({
@@ -223,21 +229,31 @@ export function TypingBox() {
 
     useEffect(() => {
         if (state !== "end") return;
+        // Prevent multiple submissions for the same completed game
+        if (scoreSubmittedRef.current) return;
+        scoreSubmittedRef.current = true;
 
         const userId = localStorage.getItem("userId");
         if (!userId) return;
 
         const result = calculateStats();
+        const totalChars = stats.correctChar + stats.incorrectChar;
 
         const payload: ScorePayload = {
             scoreValue: result.score,
             accuracy: Number(result.accuracy),
             netWPM: Number(result.net),
             userId,
+            totalCharsTyped: totalChars,
+            totalTimeTyped: result.time,
+            exp: result.score,
         };
 
-        createScoreAndUpdateUser(payload);
-    }, [state, calculateStats]);
+        createScoreAndUpdateUser(payload).then(() => {
+            refreshProfile();
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state]);
 
 
     useEffect(() => {

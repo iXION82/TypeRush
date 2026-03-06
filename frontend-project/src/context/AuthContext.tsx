@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import api from '../api/api';
-import { getAccessToken, setAccessToken } from '../auth/tokenService';
+import { setAccessToken } from '../auth/tokenService';
 
 export interface UserData {
     _id: string;
@@ -37,16 +37,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const restoreSession = async () => {
             const userId = localStorage.getItem('userId');
-            const token = getAccessToken();
-
-            if (userId && token) {
-                try {
-                    const res = await api.get(`/user/${userId}/profile`);
-                    setUser(res.data);
-                } catch {
-                    setUser(null);
-                }
+            if (!userId) {
+                setLoading(false);
+                return;
             }
+
+            try {
+
+                const refreshRes = await api.post('/auth/refresh');
+                const newToken = refreshRes.data.accessToken;
+                setAccessToken(newToken);
+
+                // Now fetch the full profile with the fresh token
+                const profileRes = await api.get(`/user/${userId}/profile`);
+                setUser(profileRes.data);
+            } catch {
+                // Refresh cookie expired or invalid — clear everything
+                setUser(null);
+                localStorage.removeItem('userId');
+            }
+
             setLoading(false);
         };
         restoreSession();
