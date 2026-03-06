@@ -6,7 +6,7 @@ import {
     Gauge, Target, MousePointer, Volume2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSettings } from '../context/SettingsContext';
+import { useSettings, getAvatarPath, AVATAR_COUNT } from '../context/SettingsContext';
 import type { ThemeOption, FontSize, CaretStyle } from '../context/SettingsContext';
 
 type Tab = 'profile' | 'theme' | 'typing';
@@ -99,17 +99,20 @@ const SettingsPage = () => {
                 <p className="text-sm text-zinc-500">Manage your account details</p>
             </div>
 
-            {/* Avatar */}
+            {/* Current Avatar & Info */}
             <div className="flex items-center gap-5 py-4">
                 <div className="
                     w-20 h-20 rounded-2xl
-                    bg-gradient-to-br from-amber-500/20 to-amber-600/10
-                    border border-amber-500/30
-                    flex items-center justify-center
-                    text-2xl font-bold text-amber-400
+                    border-2 border-amber-500/40
+                    overflow-hidden
                     shadow-lg shadow-amber-500/10
+                    bg-zinc-800/50
                 ">
-                    {settings.username ? settings.username[0].toUpperCase() : '?'}
+                    <img
+                        src={getAvatarPath(settings.avatar)}
+                        alt="Your avatar"
+                        className="w-full h-full object-cover"
+                    />
                 </div>
                 <div>
                     <div className="text-lg font-semibold text-zinc-200">
@@ -120,6 +123,44 @@ const SettingsPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Avatar Picker */}
+            <div>
+                <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1 mb-3 block">
+                    Choose Avatar
+                </label>
+                <div className="grid grid-cols-6 gap-2">
+                    {Array.from({ length: AVATAR_COUNT }, (_, i) => i + 1).map((num) => (
+                        <button
+                            key={num}
+                            onClick={() => updateSettings({ avatar: num })}
+                            className={`
+                                relative rounded-xl overflow-hidden aspect-square
+                                transition-all duration-200 cursor-pointer
+                                ${settings.avatar === num
+                                    ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-zinc-900 scale-105 shadow-lg shadow-amber-500/20'
+                                    : 'ring-1 ring-zinc-700/50 hover:ring-zinc-500/50 hover:scale-105 opacity-70 hover:opacity-100'}
+                            `}
+                        >
+                            <img
+                                src={getAvatarPath(num)}
+                                alt={`Avatar ${num}`}
+                                className="w-full h-full object-cover"
+                            />
+                            {settings.avatar === num && (
+                                <motion.div
+                                    layoutId="avatar-check"
+                                    className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center shadow-md"
+                                >
+                                    <Check className="w-3 h-3 text-black" />
+                                </motion.div>
+                            )}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="w-full h-px bg-zinc-800/80" />
 
             <div className="space-y-5">
                 <div className="space-y-2">

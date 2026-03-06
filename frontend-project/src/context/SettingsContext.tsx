@@ -8,6 +8,7 @@ export interface AppSettings {
     // Profile
     username: string;
     email: string;
+    avatar: number;
     // Theme & Visuals
     theme: ThemeOption;
     backgroundAnimation: boolean;
@@ -21,9 +22,14 @@ export interface AppSettings {
     caretStyle: CaretStyle;
 }
 
+// Avatar paths helper
+export const AVATAR_COUNT = 11;
+export const getAvatarPath = (num: number) => `/avator%20pic/ava${num}.png`;
+
 const defaultSettings: AppSettings = {
     username: '',
     email: '',
+    avatar: 1,
     theme: 'dark-space',
     backgroundAnimation: true,
     fontSize: 'medium',
