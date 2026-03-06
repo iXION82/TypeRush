@@ -4,9 +4,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { AxiosError } from "axios";
 import api from "../api/api";
 import { setAccessToken } from "../auth/tokenService";
+import { useAuth } from "../context/AuthContext";
 
 const LoginPage = () => {
     const navigate = useNavigate();
+    const auth = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -25,7 +27,7 @@ const LoginPage = () => {
 
             const { accessToken, user } = res.data;
             setAccessToken(accessToken);
-            localStorage.setItem("userId", user._id);
+            auth.login(user);
             navigate("/home");
         } catch (err) {
             const error = err as AxiosError<{ message: string }>;

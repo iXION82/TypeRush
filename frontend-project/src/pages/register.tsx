@@ -3,10 +3,12 @@ import api from '../api/api';
 import { useNavigate, Link } from "react-router-dom";
 import { setAccessToken } from "../auth/tokenService";
 import { Mail, Lock, Eye, EyeOff, User, ArrowRight } from 'lucide-react';
+import { useAuth } from "../context/AuthContext";
 
 const RegisterPage = () => {
 
     const navigate = useNavigate();
+    const auth = useAuth();
     const [name, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -35,7 +37,7 @@ const RegisterPage = () => {
 
             const { accesstoken, user } = res.data;
             setAccessToken(accesstoken);
-            localStorage.setItem("userId", user._id);
+            auth.login(user);
 
             navigate("/");
 

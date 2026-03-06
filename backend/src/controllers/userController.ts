@@ -3,7 +3,7 @@ import User from '../models/User.js';
 
 export const updateUser = async (req: Request, res: Response) => {
     try {
-        const { scoreIds, exp, totalCharsTyped, totalTimeTyped, gamesPlayed, level } = req.body;
+        const { scoreIds, exp, totalCharsTyped, totalTimeTyped, gamesPlayed, level, avaPic } = req.body;
 
         const updateOps: Record<string, any> = {};
 
@@ -21,8 +21,12 @@ export const updateUser = async (req: Request, res: Response) => {
             updateOps.$inc = incFields;
         }
 
-        if (level != null) {
-            updateOps.$set = { level };
+        const setFields: Record<string, any> = {};
+        if (level != null) setFields.level = level;
+        if (avaPic != null) setFields.avaPic = avaPic;
+
+        if (Object.keys(setFields).length > 0) {
+            updateOps.$set = setFields;
         }
 
         const updatedUser = await User.findByIdAndUpdate(
@@ -44,6 +48,20 @@ export const getUserStats = async (req: Request, res: Response) => {
     try {
         const user = await User.findById(req.params.id)
             .select('exp level totalCharsTyped totalTimeTyped gamesPlayed');
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+};
+
+export const getUserProfile = async (req: Request, res: Response) => {
+    try {
+        const user = await User.findById(req.params.id)
+            .select('name email avaPic exp level totalCharsTyped totalTimeTyped gamesPlayed');
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });

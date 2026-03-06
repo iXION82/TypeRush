@@ -6,27 +6,31 @@ import SettingsPage from './pages/settings'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SpaceBackground } from './components/SpaceBackground';
 import { SettingsProvider } from './context/SettingsContext';
+import { AuthProvider } from './context/AuthContext';
 import './App.css'
 function App() {
 
   return (
-    <SettingsProvider>
-      <BrowserRouter>
-        <SpaceBackground />
-        <div className="relative" style={{ zIndex: 1 }}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/home" replace />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/leaderboard" element={<LeaderboardPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </SettingsProvider>
+    <AuthProvider>
+      <SettingsProvider>
+        <BrowserRouter>
+          <SpaceBackground />
+          <div className="relative" style={{ zIndex: 1 }}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/home" replace />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/leaderboard" element={<LeaderboardPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
+      </SettingsProvider>
+    </AuthProvider>
   )
 }
 
 export default App
+
 
