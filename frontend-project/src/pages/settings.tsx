@@ -99,7 +99,6 @@ const SettingsPage = () => {
                 <p className="text-sm text-zinc-500">Manage your account details</p>
             </div>
 
-            {/* Current Avatar & Info */}
             <div className="flex items-center gap-5 py-4">
                 <div className="
                     w-20 h-20 rounded-2xl
@@ -124,7 +123,6 @@ const SettingsPage = () => {
                 </div>
             </div>
 
-            {/* Avatar Picker */}
             <div>
                 <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1 mb-3 block">
                     Choose Avatar
@@ -266,7 +264,6 @@ const SettingsPage = () => {
                 <p className="text-sm text-zinc-500">Customize the look and feel</p>
             </div>
 
-            {/* Theme Cards */}
             <div>
                 <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1 mb-3 block">
                     Color Theme
@@ -310,7 +307,6 @@ const SettingsPage = () => {
 
             <div className="w-full h-px bg-zinc-800/80" />
 
-            {/* Background Animation */}
             <SettingsToggle
                 enabled={settings.backgroundAnimation}
                 onToggle={() => updateSettings({ backgroundAnimation: !settings.backgroundAnimation })}
@@ -321,7 +317,6 @@ const SettingsPage = () => {
 
             <div className="w-full h-px bg-zinc-800/80" />
 
-            {/* Font Size */}
             <div className="py-2">
                 <div className="flex items-center gap-3 mb-4">
                     <div className="w-9 h-9 rounded-lg bg-zinc-800/60 border border-zinc-700/40 flex items-center justify-center text-zinc-500">
@@ -353,7 +348,6 @@ const SettingsPage = () => {
 
             <div className="w-full h-px bg-zinc-800/80" />
 
-            {/* High Contrast */}
             <SettingsToggle
                 enabled={settings.highContrast}
                 onToggle={() => updateSettings({ highContrast: !settings.highContrast })}
@@ -378,7 +372,6 @@ const SettingsPage = () => {
                 <p className="text-sm text-zinc-500">Configure your typing experience</p>
             </div>
 
-            {/* Live Stats */}
             <div>
                 <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1 mb-1 block">
                     Live Statistics
@@ -402,7 +395,6 @@ const SettingsPage = () => {
 
             <div className="w-full h-px bg-zinc-800/80" />
 
-            {/* Caret Behavior */}
             <div>
                 <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1 mb-1 block">
                     Caret
@@ -458,7 +450,6 @@ const SettingsPage = () => {
 
             <div className="w-full h-px bg-zinc-800/80" />
 
-            {/* Sound */}
             <SettingsToggle
                 enabled={settings.soundOnKey}
                 onToggle={() => updateSettings({ soundOnKey: !settings.soundOnKey })}
@@ -485,11 +476,11 @@ const SettingsPage = () => {
                     relative
                     overflow-hidden
                 ">
-                    {/* Glow effect */}
+  
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-amber-500/10 rounded-full blur-[80px] pointer-events-none" />
 
                     <div className="flex flex-col md:flex-row gap-8 relative z-10">
-                        {/* Sidebar */}
+                       
                         <div className="md:w-56 shrink-0">
                             <h1 className="text-2xl font-bold text-zinc-100 mb-6 flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
@@ -521,10 +512,8 @@ const SettingsPage = () => {
                             </nav>
                         </div>
 
-                        {/* Divider */}
                         <div className="hidden md:block w-px bg-zinc-800/80 self-stretch" />
 
-                        {/* Content Panel */}
                         <div className="flex-1 min-h-[420px]">
                             <AnimatePresence mode="wait">
                                 {activeTab === 'profile' && renderProfile()}

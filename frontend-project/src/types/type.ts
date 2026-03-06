@@ -6,4 +6,5 @@ export type ScorePayload = {
   totalCharsTyped?: number;
   totalTimeTyped?: number;
   exp?: number;
+  newLevel?: number;
 };

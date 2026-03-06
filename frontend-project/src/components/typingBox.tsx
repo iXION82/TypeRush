@@ -4,12 +4,15 @@ import type { ScorePayload } from "../types/type";
 import { createScoreAndUpdateUser } from "../controller/ScoreCreate";
 import { fetchText } from "../controller/TextFetch";
 import { useAuth } from "../context/AuthContext";
+import { getLevelData } from "../utils/levelUtils";
 type Mode = "time" | "words" | "zen";
 type Level = 1 | 2 | 3 | null;
 type State = "idle" | "playing" | "end";
 
 export function TypingBox() {
-    const { refreshProfile } = useAuth();
+    const { refreshProfile, user } = useAuth();
+    const userRef = useRef(user);
+    useEffect(() => { userRef.current = user; }, [user]);
     const [text, setText] = useState("Loading...");
     const [fetchTrigger, setFetchTrigger] = useState(0);
     const words = useMemo(() => text.split(" "), [text]);
@@ -33,7 +36,6 @@ export function TypingBox() {
     const caretRef = useRef<HTMLSpanElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const timerIntervalRef = useRef<number | null>(null);
-    // Guard: only submit score once per completed game
     const scoreSubmittedRef = useRef(false);
 
 
@@ -140,7 +142,7 @@ export function TypingBox() {
             correctChar: 0,
             incorrectChar: 0
         });
-        // Allow next game to submit its score
+        
         scoreSubmittedRef.current = false;
 
         if (mode === "time") {
@@ -229,7 +231,6 @@ export function TypingBox() {
 
     useEffect(() => {
         if (state !== "end") return;
-        // Prevent multiple submissions for the same completed game
         if (scoreSubmittedRef.current) return;
         scoreSubmittedRef.current = true;
 
@@ -238,6 +239,11 @@ export function TypingBox() {
 
         const result = calculateStats();
         const totalChars = stats.correctChar + stats.incorrectChar;
+        const earnedExp = result.score;
+
+        const currentExp = userRef.current?.exp ?? 0;
+        const newTotalExp = currentExp + earnedExp;
+        const { level: newLevel } = getLevelData(newTotalExp);
 
         const payload: ScorePayload = {
             scoreValue: result.score,
@@ -246,13 +252,13 @@ export function TypingBox() {
             userId,
             totalCharsTyped: totalChars,
             totalTimeTyped: result.time,
-            exp: result.score,
+            exp: earnedExp,
+            newLevel,
         };
 
         createScoreAndUpdateUser(payload).then(() => {
             refreshProfile();
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state]);
 
 

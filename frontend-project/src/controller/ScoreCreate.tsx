@@ -24,6 +24,7 @@ export const createScoreAndUpdateUser = async (
       totalCharsTyped: scoreData.totalCharsTyped ?? 0,
       totalTimeTyped: scoreData.totalTimeTyped ?? 0,
       gamesPlayed: 1,
+      ...(scoreData.newLevel !== undefined && { level: scoreData.newLevel }),
     });
 
     return {

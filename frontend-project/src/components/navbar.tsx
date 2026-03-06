@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Keyboard, Trophy, Settings, LogIn, LogOut, Zap, Clock, Type, Gamepad2, Star } from "lucide-react";
+import { Keyboard, Trophy, Settings, LogIn, LogOut, Clock, Type, Gamepad2, Star } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getAvatarPath } from "../context/SettingsContext";
+import { getLevelData } from "../utils/levelUtils";
 
 export function Navbar() {
     const navigate = useNavigate();
@@ -13,7 +14,6 @@ export function Navbar() {
 
     const isActive = (path: string) => location.pathname === path;
 
-    // Close dropdown on outside click
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -108,7 +108,7 @@ export function Navbar() {
                     <div className="w-px h-5 bg-zinc-700/50 mx-2" />
 
                     {user ? (
-                        /* ---- Profile Avatar ---- */
+                        
                         <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setShowDropdown(!showDropdown)}
@@ -130,7 +130,6 @@ export function Navbar() {
                                 />
                             </button>
 
-                            {/* Stats Dropdown */}
                             {showDropdown && (
                                 <div className="
                                     absolute right-0 top-12
@@ -143,7 +142,6 @@ export function Navbar() {
                                     animate-in fade-in slide-in-from-top-2
                                     z-[100]
                                 ">
-                                    {/* Header */}
                                     <div className="px-5 pt-5 pb-4 border-b border-zinc-700/30">
                                         <div className="flex items-center gap-3">
                                             <div className="w-12 h-12 rounded-full border-2 border-amber-500/30 overflow-hidden flex-shrink-0">
@@ -158,35 +156,31 @@ export function Navbar() {
                                                 <p className="text-zinc-500 text-xs truncate">{user.email}</p>
                                             </div>
                                         </div>
-                                        {/* Level badge */}
-                                        <div className="mt-3 flex items-center gap-2">
-                                            <div className="
-                                                px-2.5 py-1 rounded-lg
-                                                bg-amber-500/10 border border-amber-500/20
-                                                text-amber-400 text-xs font-bold
-                                                flex items-center gap-1
-                                            ">
-                                                <Star className="w-3 h-3" />
-                                                Level {user.level}
+                                        <div className="mt-3">
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <div className="
+                                                    px-2.5 py-1 rounded-lg
+                                                    bg-amber-500/10 border border-amber-500/20
+                                                    text-amber-400 text-xs font-bold
+                                                    flex items-center gap-1
+                                                ">
+                                                    <Star className="w-3 h-3" />
+                                                    Level {user.level}
+                                                </div>
+                                                <span className="text-zinc-500 text-[10px]">
+                                                    {getLevelData(user.exp).currentLevelExp.toLocaleString()} / {getLevelData(user.exp).expForNextLevel.toLocaleString()} XP
+                                                </span>
                                             </div>
-                                            <div className="text-zinc-500 text-xs">
-                                                {user.exp} XP
+                                            <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full bg-amber-400 transition-all duration-500"
+                                                    style={{ width: `${(getLevelData(user.exp).progress * 100).toFixed(1)}%`, boxShadow: '0 0 6px rgba(251,191,36,0.6)' }}
+                                                />
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Stats Grid */}
-                                    <div className="px-5 py-4 grid grid-cols-2 gap-3">
-                                        <div className="
-                                            px-3 py-2.5 rounded-xl
-                                            bg-zinc-800/50 border border-zinc-700/30
-                                        ">
-                                            <div className="flex items-center gap-1.5 mb-1">
-                                                <Zap className="w-3 h-3 text-amber-400" />
-                                                <span className="text-zinc-500 text-[10px] uppercase tracking-wider">XP</span>
-                                            </div>
-                                            <p className="text-zinc-100 font-bold text-sm">{user.exp.toLocaleString()}</p>
-                                        </div>
+                                    <div className="px-5 py-4 grid grid-cols-3 gap-3">
                                         <div className="
                                             px-3 py-2.5 rounded-xl
                                             bg-zinc-800/50 border border-zinc-700/30
@@ -219,7 +213,7 @@ export function Navbar() {
                                         </div>
                                     </div>
 
-                                    {/* Logout */}
+                                    
                                     <div className="px-5 pb-4">
                                         <button
                                             onClick={() => {
@@ -245,7 +239,7 @@ export function Navbar() {
                             )}
                         </div>
                     ) : (
-                        /* ---- Login Button ---- */
+                        
                         <button
                             onClick={() => navigate("/login")}
                             className="
