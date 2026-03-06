@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
+import { useSettings, THEME_CONFIGS } from "../context/SettingsContext";
 
 interface Star {
     x: number;
@@ -117,6 +118,9 @@ function createConstellations(stars: Star[]): ConstellationLine[][] {
 }
 
 export function SpaceBackground() {
+    const { settings } = useSettings();
+    const themeConfig = THEME_CONFIGS[settings.theme];
+
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const starsRef = useRef<Star[]>([]);
     const constellationsRef = useRef<ConstellationLine[][]>([]);
@@ -130,6 +134,12 @@ export function SpaceBackground() {
     const nextShootingDelay = useRef(
         randomBetween(SHOOTING_STAR_INTERVAL_MIN, SHOOTING_STAR_INTERVAL_MAX)
     );
+
+    // Store themeConfig in a ref so canvas draw loop always reads latest
+    const themeConfigRef = useRef(themeConfig);
+    useEffect(() => {
+        themeConfigRef.current = themeConfig;
+    }, [themeConfig]);
 
     const initCanvas = useCallback(() => {
         const canvas = canvasRef.current;
@@ -173,6 +183,7 @@ export function SpaceBackground() {
             const ctx = canvas.getContext("2d");
             if (!ctx) return;
 
+            const currentTheme = themeConfigRef.current;
             const w = window.innerWidth;
             const h = window.innerHeight;
             const fieldH = fieldHeightRef.current;
@@ -200,29 +211,32 @@ export function SpaceBackground() {
 
             ctx.clearRect(0, 0, w, h);
 
+            // Theme-driven background gradient
             const gradient = ctx.createRadialGradient(
                 w * 0.5, h * 0.4, 0,
                 w * 0.5, h * 0.4, Math.max(w, h) * 0.8
             );
-            gradient.addColorStop(0, "#0d1117");
-            gradient.addColorStop(0.4, "#090c10");
-            gradient.addColorStop(1, "#030508");
+            for (const stop of currentTheme.gradient) {
+                gradient.addColorStop(stop.stop, stop.color);
+            }
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, w, h);
 
+            // Theme-driven nebula 1
             const nebula1 = ctx.createRadialGradient(
                 w * 0.2, h * 0.6, 0, w * 0.2, h * 0.6, w * 0.35
             );
-            nebula1.addColorStop(0, "rgba(30, 40, 80, 0.06)");
-            nebula1.addColorStop(1, "rgba(30, 40, 80, 0)");
+            nebula1.addColorStop(0, currentTheme.nebula1);
+            nebula1.addColorStop(1, currentTheme.nebula1.replace(/[\d.]+\)$/, '0)'));
             ctx.fillStyle = nebula1;
             ctx.fillRect(0, 0, w, h);
 
+            // Theme-driven nebula 2
             const nebula2 = ctx.createRadialGradient(
                 w * 0.75, h * 0.3, 0, w * 0.75, h * 0.3, w * 0.3
             );
-            nebula2.addColorStop(0, "rgba(50, 30, 60, 0.04)");
-            nebula2.addColorStop(1, "rgba(50, 30, 60, 0)");
+            nebula2.addColorStop(0, currentTheme.nebula2);
+            nebula2.addColorStop(1, currentTheme.nebula2.replace(/[\d.]+\)$/, '0)'));
             ctx.fillStyle = nebula2;
             ctx.fillRect(0, 0, w, h);
 
@@ -235,9 +249,10 @@ export function SpaceBackground() {
                 return sy;
             };
 
+            // Theme-driven constellation lines
             for (const group of constellationsRef.current) {
                 ctx.beginPath();
-                ctx.strokeStyle = "rgba(180, 200, 230, 0.15)";
+                ctx.strokeStyle = currentTheme.constellationColor;
                 ctx.lineWidth = 0.5;
                 for (const line of group) {
                     const s1 = stars[line.from];
@@ -369,7 +384,21 @@ export function SpaceBackground() {
             window.removeEventListener("mousemove", handleMouseMove);
             document.removeEventListener("mouseleave", handleMouseLeave);
         };
-    }, [initCanvas]);
+    }, [initCanvas, settings.backgroundAnimation]);
+
+    // When animation is disabled, render a static themed gradient instead of the canvas
+    if (!settings.backgroundAnimation) {
+        const bg = themeConfig.gradient;
+        return (
+            <div
+                className="fixed inset-0 w-full h-full"
+                style={{
+                    zIndex: 0,
+                    background: `radial-gradient(ellipse at 50% 40%, ${bg[0].color} 0%, ${bg[1].color} 40%, ${bg[2].color} 100%)`,
+                }}
+            />
+        );
+    }
 
     return (
         <canvas

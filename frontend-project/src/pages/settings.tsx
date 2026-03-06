@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Navbar } from '../components/navbar';
 import {
     User, Palette, KeyboardIcon, ChevronRight,
@@ -6,11 +6,10 @@ import {
     Gauge, Target, MousePointer, Volume2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSettings } from '../context/SettingsContext';
+import type { ThemeOption, FontSize, CaretStyle } from '../context/SettingsContext';
 
 type Tab = 'profile' | 'theme' | 'typing';
-type CaretStyle = 'line' | 'block' | 'underline';
-type ThemeOption = 'dark-space' | 'midnight' | 'amber-glow';
-type FontSize = 'small' | 'medium' | 'large';
 
 interface ToggleProps {
     enabled: boolean;
@@ -76,61 +75,10 @@ const themeOptions: { key: ThemeOption; label: string; colors: string[] }[] = [
     { key: 'amber-glow', label: 'Amber Glow', colors: ['#1a1000', '#2a1a00', '#3d2800'] },
 ];
 
-const loadSettings = () => {
-    try {
-        const saved = localStorage.getItem('typerush-settings');
-        return saved ? JSON.parse(saved) : null;
-    } catch {
-        return null;
-    }
-};
-
 const SettingsPage = () => {
+    const { settings, updateSettings } = useSettings();
     const [activeTab, setActiveTab] = useState<Tab>('profile');
-
-    // Profile
-    const [username, setUsername] = useState('');
-    const [email, setEmail] = useState('');
     const [profileSaved, setProfileSaved] = useState(false);
-
-    // Theme
-    const [theme, setTheme] = useState<ThemeOption>('dark-space');
-    const [backgroundAnimation, setBackgroundAnimation] = useState(true);
-    const [fontSize, setFontSize] = useState<FontSize>('medium');
-
-    // Typing
-    const [liveWpm, setLiveWpm] = useState(true);
-    const [liveAccuracy, setLiveAccuracy] = useState(true);
-    const [smoothCaret, setSmoothCaret] = useState(true);
-    const [soundOnKey, setSoundOnKey] = useState(false);
-    const [caretStyle, setCaretStyle] = useState<CaretStyle>('line');
-
-    // Load from localStorage on mount
-    useEffect(() => {
-        const saved = loadSettings();
-        if (saved) {
-            setUsername(saved.username ?? '');
-            setEmail(saved.email ?? '');
-            setTheme(saved.theme ?? 'dark-space');
-            setBackgroundAnimation(saved.backgroundAnimation ?? true);
-            setFontSize(saved.fontSize ?? 'medium');
-            setLiveWpm(saved.liveWpm ?? true);
-            setLiveAccuracy(saved.liveAccuracy ?? true);
-            setSmoothCaret(saved.smoothCaret ?? true);
-            setSoundOnKey(saved.soundOnKey ?? false);
-            setCaretStyle(saved.caretStyle ?? 'line');
-        }
-    }, []);
-
-    // Auto-save non-profile settings
-    useEffect(() => {
-        const settings = {
-            username, email,
-            theme, backgroundAnimation, fontSize,
-            liveWpm, liveAccuracy, smoothCaret, soundOnKey, caretStyle,
-        };
-        localStorage.setItem('typerush-settings', JSON.stringify(settings));
-    }, [theme, backgroundAnimation, fontSize, liveWpm, liveAccuracy, smoothCaret, soundOnKey, caretStyle, username, email]);
 
     const handleProfileSave = () => {
         setProfileSaved(true);
@@ -161,14 +109,14 @@ const SettingsPage = () => {
                     text-2xl font-bold text-amber-400
                     shadow-lg shadow-amber-500/10
                 ">
-                    {username ? username[0].toUpperCase() : '?'}
+                    {settings.username ? settings.username[0].toUpperCase() : '?'}
                 </div>
                 <div>
                     <div className="text-lg font-semibold text-zinc-200">
-                        {username || 'Anonymous'}
+                        {settings.username || 'Anonymous'}
                     </div>
                     <div className="text-sm text-zinc-500 mt-0.5">
-                        {email || 'No email set'}
+                        {settings.email || 'No email set'}
                     </div>
                 </div>
             </div>
@@ -184,8 +132,8 @@ const SettingsPage = () => {
                         </div>
                         <input
                             type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            value={settings.username}
+                            onChange={(e) => updateSettings({ username: e.target.value })}
                             className="
                                 w-full
                                 bg-zinc-800/50
@@ -215,8 +163,8 @@ const SettingsPage = () => {
                         </div>
                         <input
                             type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            value={settings.email}
+                            onChange={(e) => updateSettings({ email: e.target.value })}
                             className="
                                 w-full
                                 bg-zinc-800/50
@@ -286,10 +234,10 @@ const SettingsPage = () => {
                     {themeOptions.map((t) => (
                         <button
                             key={t.key}
-                            onClick={() => setTheme(t.key)}
+                            onClick={() => updateSettings({ theme: t.key })}
                             className={`
                                 relative rounded-xl p-3 border transition-all duration-300 cursor-pointer
-                                ${theme === t.key
+                                ${settings.theme === t.key
                                     ? 'border-amber-500/50 bg-amber-500/5 shadow-lg shadow-amber-500/10'
                                     : 'border-zinc-700/40 bg-zinc-800/30 hover:border-zinc-600/60 hover:bg-zinc-800/50'}
                             `}
@@ -303,10 +251,10 @@ const SettingsPage = () => {
                                     />
                                 ))}
                             </div>
-                            <div className={`text-xs font-medium text-center ${theme === t.key ? 'text-amber-400' : 'text-zinc-400'}`}>
+                            <div className={`text-xs font-medium text-center ${settings.theme === t.key ? 'text-amber-400' : 'text-zinc-400'}`}>
                                 {t.label}
                             </div>
-                            {theme === t.key && (
+                            {settings.theme === t.key && (
                                 <motion.div
                                     layoutId="theme-check"
                                     className="absolute top-2 right-2 w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center"
@@ -323,8 +271,8 @@ const SettingsPage = () => {
 
             {/* Background Animation */}
             <SettingsToggle
-                enabled={backgroundAnimation}
-                onToggle={() => setBackgroundAnimation(!backgroundAnimation)}
+                enabled={settings.backgroundAnimation}
+                onToggle={() => updateSettings({ backgroundAnimation: !settings.backgroundAnimation })}
                 label="Background Animation"
                 description="Enable the animated space background"
                 icon={<Sparkles className="w-4 h-4" />}
@@ -347,11 +295,11 @@ const SettingsPage = () => {
                     {(['small', 'medium', 'large'] as FontSize[]).map((size) => (
                         <button
                             key={size}
-                            onClick={() => setFontSize(size)}
+                            onClick={() => updateSettings({ fontSize: size })}
                             className={`
                                 flex-1 py-2.5 rounded-lg text-sm font-medium capitalize
                                 transition-all duration-200 cursor-pointer
-                                ${fontSize === size
+                                ${settings.fontSize === size
                                     ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
                                     : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-800/80 hover:text-zinc-300'}
                             `}
@@ -364,10 +312,10 @@ const SettingsPage = () => {
 
             <div className="w-full h-px bg-zinc-800/80" />
 
-            {/* Monitor */}
+            {/* High Contrast */}
             <SettingsToggle
-                enabled={true}
-                onToggle={() => { }}
+                enabled={settings.highContrast}
+                onToggle={() => updateSettings({ highContrast: !settings.highContrast })}
                 label="High Contrast Mode"
                 description="Increase contrast for better readability"
                 icon={<Monitor className="w-4 h-4" />}
@@ -395,16 +343,16 @@ const SettingsPage = () => {
                     Live Statistics
                 </label>
                 <SettingsToggle
-                    enabled={liveWpm}
-                    onToggle={() => setLiveWpm(!liveWpm)}
+                    enabled={settings.liveWpm}
+                    onToggle={() => updateSettings({ liveWpm: !settings.liveWpm })}
                     label="Live WPM"
                     description="Show words-per-minute while typing"
                     icon={<Gauge className="w-4 h-4" />}
                 />
                 <div className="w-full h-px bg-zinc-800/60" />
                 <SettingsToggle
-                    enabled={liveAccuracy}
-                    onToggle={() => setLiveAccuracy(!liveAccuracy)}
+                    enabled={settings.liveAccuracy}
+                    onToggle={() => updateSettings({ liveAccuracy: !settings.liveAccuracy })}
                     label="Live Accuracy"
                     description="Show accuracy percentage while typing"
                     icon={<Target className="w-4 h-4" />}
@@ -419,8 +367,8 @@ const SettingsPage = () => {
                     Caret
                 </label>
                 <SettingsToggle
-                    enabled={smoothCaret}
-                    onToggle={() => setSmoothCaret(!smoothCaret)}
+                    enabled={settings.smoothCaret}
+                    onToggle={() => updateSettings({ smoothCaret: !settings.smoothCaret })}
                     label="Smooth Caret"
                     description="Animate caret movement between letters"
                     icon={<MousePointer className="w-4 h-4" />}
@@ -446,19 +394,19 @@ const SettingsPage = () => {
                         ]).map((style) => (
                             <button
                                 key={style.key}
-                                onClick={() => setCaretStyle(style.key)}
+                                onClick={() => updateSettings({ caretStyle: style.key })}
                                 className={`
                                     flex-1 py-4 rounded-xl text-center
                                     transition-all duration-200 cursor-pointer
-                                    ${caretStyle === style.key
+                                    ${settings.caretStyle === style.key
                                         ? 'bg-amber-500/15 border border-amber-500/30 shadow-lg shadow-amber-500/10'
                                         : 'bg-zinc-800/30 border border-zinc-700/40 hover:bg-zinc-800/60 hover:border-zinc-600/50'}
                                 `}
                             >
-                                <div className={`text-2xl font-mono mb-1 ${caretStyle === style.key ? 'text-amber-400' : 'text-zinc-500'}`}>
+                                <div className={`text-2xl font-mono mb-1 ${settings.caretStyle === style.key ? 'text-amber-400' : 'text-zinc-500'}`}>
                                     {style.preview}
                                 </div>
-                                <div className={`text-xs font-medium ${caretStyle === style.key ? 'text-amber-400' : 'text-zinc-500'}`}>
+                                <div className={`text-xs font-medium ${settings.caretStyle === style.key ? 'text-amber-400' : 'text-zinc-500'}`}>
                                     {style.label}
                                 </div>
                             </button>
@@ -471,8 +419,8 @@ const SettingsPage = () => {
 
             {/* Sound */}
             <SettingsToggle
-                enabled={soundOnKey}
-                onToggle={() => setSoundOnKey(!soundOnKey)}
+                enabled={settings.soundOnKey}
+                onToggle={() => updateSettings({ soundOnKey: !settings.soundOnKey })}
                 label="Sound on Keypress"
                 description="Play a subtle click sound when typing"
                 icon={<Volume2 className="w-4 h-4" />}
