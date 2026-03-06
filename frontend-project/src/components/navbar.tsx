@@ -65,12 +65,16 @@ export function Navbar() {
                         Leaderboard
                     </button>
                     <button
-                        className="
+                        onClick={() => navigate("/settings")}
+                        className={`
                             px-3.5 py-2 rounded-lg text-sm font-medium
-                            text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40
                             flex items-center gap-1.5
                             transition-all duration-200
-                        "
+                            ${isActive("/settings")
+                                ? "bg-zinc-800/70 text-amber-400"
+                                : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40"
+                            }
+                        `}
                     >
                         <Settings className="w-3.5 h-3.5" />
                         Settings
