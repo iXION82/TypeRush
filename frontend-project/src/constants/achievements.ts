@@ -33,4 +33,14 @@ export const ACHIEVEMENTS: Achievement[] = [
     { id: 'level-10', title: 'Double Digits', description: 'Reach Level 10.', icon: Zap, isUnlocked: (u) => u.level >= 10, progress: (u) => ({ current: u.level, max: 10 }) },
     { id: 'level-50', title: 'Halfway There', description: 'Reach Level 50.', icon: Zap, isUnlocked: (u) => u.level >= 50, progress: (u) => ({ current: u.level, max: 50 }) },
     { id: 'level-100', title: 'Grandmaster', description: 'Reach Level 100.', icon: Crown, isUnlocked: (u) => u.level >= 100, progress: (u) => ({ current: u.level, max: 100 }) },
+
+    // Mastery
+    {
+        id: 'master-all',
+        title: 'Overachiever',
+        description: 'Unlock all 17 basic achievements.',
+        icon: Trophy,
+        isUnlocked: (u) => ACHIEVEMENTS.filter(a => a.id !== 'master-all' && a.isUnlocked(u)).length >= 17,
+        progress: (u) => ({ current: ACHIEVEMENTS.filter(a => a.id !== 'master-all' && a.isUnlocked(u)).length, max: 17 })
+    },
 ];
