@@ -31,23 +31,44 @@ export const ScoreCreation = async (req: Request, res: Response) => {
 
         const category = `${gameMode}-${punctuation ? 'puncTrue' : 'puncFalse'}-${numbers ? 'numTrue' : 'numFalse'}`;
 
-        await Leaderboard.findOneAndUpdate(
-            { category },
-            {
-                $push: {
-                    topScores: {
-                        $each: [{
-                            scoreId: createdScore._id,
-                            scoreValue: createdScore.scoreValue,
-                            userId: createdScore.userId
-                        }],
-                        $sort: { scoreValue: -1 },
-                        $slice: 10
-                    }
-                }
-            },
-            { upsert: true, new: true }
+        let leaderboard = await Leaderboard.findOne({ category });
+        if (!leaderboard) {
+            leaderboard = new Leaderboard({ category, topScores: [] });
+        }
+
+        const existingScoreIndex = leaderboard.topScores!.findIndex(
+            s => s.userId.toString() === userId.toString()
         );
+
+        let isLeaderboardUpdated = false;
+
+        if (existingScoreIndex !== -1) {
+            if (createdScore.scoreValue > leaderboard.topScores![existingScoreIndex]!.scoreValue) {
+                // Replace the lower score with the new higher score
+                leaderboard.topScores![existingScoreIndex] = {
+                    scoreId: createdScore._id,
+                    scoreValue: createdScore.scoreValue,
+                    userId: createdScore.userId
+                } as any;
+                isLeaderboardUpdated = true;
+            }
+        } else {
+            // New user score for this category
+            leaderboard.topScores!.push({
+                scoreId: createdScore._id,
+                scoreValue: createdScore.scoreValue,
+                userId: createdScore.userId
+            } as any);
+            isLeaderboardUpdated = true;
+        }
+
+        if (isLeaderboardUpdated) {
+            leaderboard.topScores!.sort((a, b) => b.scoreValue - a.scoreValue);
+            if (leaderboard.topScores!.length > 10) {
+                leaderboard.topScores = leaderboard.topScores!.slice(0, 10) as any;
+            }
+            await leaderboard.save();
+        }
 
         // Update personal best score in User model
         const userStr = String(userId);
