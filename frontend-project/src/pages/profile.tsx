@@ -5,6 +5,8 @@ import { getAvatarPath } from '../context/SettingsContext';
 import { getLevelData } from '../utils/levelUtils';
 import { Navbar } from '../components/navbar';
 
+import { ACHIEVEMENTS } from '../constants/achievements';
+
 export default function ProfilePage() {
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -152,14 +154,28 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {/* Achievements Space (Prepared for future expansion) */}
-                        <div className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-700/50 rounded-3xl p-6 flex flex-col">
-                            <h3 className="text-sm uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-2 mb-4">
-                                <Trophy className="w-4 h-4 text-amber-400" /> Achievements
-                            </h3>
-                            <div className="flex-1 flex flex-col items-center justify-center py-8 opacity-60">
-                                <Trophy className="w-12 h-12 text-zinc-600 mb-3" />
-                                <p className="text-sm text-zinc-500 text-center">Achievements system<br />coming soon.</p>
+                        {/* Achievements Space */}
+                        {/* Achievements Summary Link */}
+                        <div
+                            onClick={() => navigate('/achievements')}
+                            className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-700/50 rounded-3xl p-6 flex flex-col justify-between hover:bg-zinc-800/60 hover:border-amber-500/30 transition-all cursor-pointer group"
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-sm uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-2 group-hover:text-amber-400 transition-colors">
+                                    <Trophy className="w-4 h-4 text-amber-500" /> Achievements
+                                </h3>
+                                <ArrowLeft className="w-4 h-4 text-zinc-600 rotate-180 group-hover:text-amber-400 transition-colors" />
+                            </div>
+                            <div className="flex items-end justify-between mt-2">
+                                <p className="text-sm text-zinc-500">View all unlocked trophies</p>
+                                <div className="text-right">
+                                    <span className="text-2xl font-bold bg-gradient-to-br from-amber-200 to-amber-500 bg-clip-text text-transparent">
+                                        {ACHIEVEMENTS.filter(a => a.isUnlocked(user)).length}
+                                    </span>
+                                    <span className="text-sm text-zinc-500 font-mono ml-1">
+                                        / {ACHIEVEMENTS.length}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
