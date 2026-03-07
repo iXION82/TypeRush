@@ -3,7 +3,7 @@ import { Navbar } from '../components/navbar';
 import {
     User, Palette, KeyboardIcon, ChevronRight,
     Save, Check, Monitor, Sparkles, Type,
-    Gauge, Target, MousePointer, Volume2, AlertCircle
+    Gauge, Target, MousePointer, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettings, getAvatarPath, AVATAR_COUNT } from '../context/SettingsContext';
@@ -229,21 +229,6 @@ const SettingsPage = () => {
                             disabled:opacity-40 disabled:cursor-not-allowed"
                         placeholder="Enter your username"
                     />
-                </div>
-            </div>
-
-            {/* Email — read-only display */}
-            <div className="space-y-2">
-                <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1">
-                    Email <span className="normal-case text-zinc-600 ml-1">(cannot be changed)</span>
-                </label>
-                <div className="
-                    w-full px-4 py-3.5 rounded-xl
-                    bg-zinc-800/30 border border-zinc-700/30
-                    text-zinc-500 text-sm
-                    select-none
-                ">
-                    {user?.email ?? '—'}
                 </div>
             </div>
 
@@ -478,15 +463,6 @@ const SettingsPage = () => {
                 </div>
             </div>
 
-            <div className="w-full h-px bg-zinc-800/80" />
-
-            <SettingsToggle
-                enabled={settings.soundOnKey}
-                onToggle={() => updateSettings({ soundOnKey: !settings.soundOnKey })}
-                label="Sound on Keypress"
-                description="Play a subtle click sound when typing"
-                icon={<Volume2 className="w-4 h-4" />}
-            />
         </motion.div>
     );
 
