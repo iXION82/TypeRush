@@ -6,6 +6,7 @@ import SettingsPage from './pages/settings'
 import ProfilePage from './pages/profile'
 import AchievementsPage from './pages/achievements'
 import AdminTextPage from './pages/adminText'
+import NotFoundPage from './pages/notFound'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SpaceBackground } from './components/SpaceBackground';
 import { SettingsProvider } from './context/SettingsContext';
@@ -29,6 +30,7 @@ function App() {
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/achievements" element={<AchievementsPage />} />
               <Route path="/admin-text" element={<AdminTextPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </div>
         </BrowserRouter>

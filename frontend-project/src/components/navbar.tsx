@@ -72,7 +72,7 @@ export function Navbar() {
                             }
                         `}
                     >
-                        Practice
+                        Type
                     </button>
                     <button
                         onClick={() => navigate("/leaderboard")}
