@@ -3,13 +3,16 @@ import Score from '../models/Score.js';
 
 export const ScoreCreation = async (req: Request, res: Response) => {
     try {
-        const { userId, accuracy, netWPM, scoreValue } = req.body;
+        const { userId, accuracy, netWPM, scoreValue, gameMode, punctuation, numbers } = req.body;
 
         const newScore = new Score({
             userId,
             accuracy,
             netWPM,
             scoreValue,
+            gameMode,
+            punctuation,
+            numbers
         });
 
         const createdScore = await newScore.save();

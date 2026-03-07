@@ -13,6 +13,9 @@ export const createScoreAndUpdateUser = async (
       accuracy: scoreData.accuracy,
       netWPM: scoreData.netWPM,
       scoreValue: scoreData.scoreValue,
+      gameMode: scoreData.gameMode,
+      punctuation: scoreData.punctuation,
+      numbers: scoreData.numbers,
     });
     const score = scoreRes.data;
     const scoreIds = score._id;

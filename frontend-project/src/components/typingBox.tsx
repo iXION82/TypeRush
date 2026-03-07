@@ -252,6 +252,9 @@ export function TypingBox() {
             accuracy: Number(result.accuracy),
             netWPM: Number(result.net),
             userId,
+            gameMode: mode,
+            punctuation,
+            numbers,
             totalCharsTyped: totalChars,
             totalTimeTyped: result.time,
             exp: earnedExp,
@@ -514,7 +517,6 @@ export function TypingBox() {
 
                 </div>
 
-                {/* Live stats bar */}
                 <div className={`
                     mt-8 flex items-center justify-center gap-4
                     transition-all duration-1000 ease-out

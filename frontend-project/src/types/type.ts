@@ -3,6 +3,9 @@ export type ScorePayload = {
   accuracy: number;
   scoreValue: number;
   userId: string;
+  gameMode: string;
+  punctuation: boolean;
+  numbers: boolean;
   totalCharsTyped?: number;
   totalTimeTyped?: number;
   exp?: number;
