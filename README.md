@@ -20,7 +20,13 @@ A sleek, responsive, full-stack typing speed test application built with **React
 - **18 Dynamic Trophies**: Earn specific badges by hitting milestones (e.g., *Novelist* for typing 100k characters, *In The Zone* for 1hr of typing time, or the elusive *Overachiever* for unlocking all other achievements).
 - **Progress Tracking**: Unlocked achievements glow with custom `lucide-react` icons, while locked ones display visual progress bars bridging the gap to your next milestone.
 
-### 🎨 Visuals & Customization
+### � Global Leaderboard
+- **Ranked Competition**: See how your scores stack up against every other player in a live global leaderboard.
+- **Filterable**: Filter the leaderboard by game mode (Time / Words), duration/word count, and whether punctuation or numbers were enabled.
+- **Player Profiles**: Each leaderboard entry shows the player's avatar, username, Net WPM, accuracy, and date achieved.
+- **Podium Highlights**: The top 3 players receive special gold, silver, and bronze styling.
+
+### �🎨 Visuals & Customization
 - **Immersive Background**: A custom responsive Space Background constellation renderer powers the entire application aesthetics.
 - **Visual Themes**: Change the visual feel of the game directly from Settings (Dark Space, Midnight, Amber Glow).
 - **Typography & UI Options**: Fully adjustable font sizes, and choice of standard or block caret styles.
