@@ -11,7 +11,7 @@ export interface IUser extends Document {
     totalCharsTyped: number;
     totalTimeTyped: number;
     gamesPlayed: number;
-    bestScores: Map<string, number>;
+    bestScores: Map<string, { wpm: number, accuracy: number, date: Date }>;
 }
 
 const UserSchema = new Schema({
@@ -27,7 +27,11 @@ const UserSchema = new Schema({
     gamesPlayed: { type: Number, default: 0 },
     bestScores: {
         type: Map,
-        of: Number,
+        of: new Schema({
+            wpm: { type: Number, required: true },
+            accuracy: { type: Number, required: true },
+            date: { type: Date, default: Date.now }
+        }, { _id: false }),
         default: {}
     }
 }, { timestamps: true });

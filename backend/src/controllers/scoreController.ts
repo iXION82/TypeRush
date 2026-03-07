@@ -71,13 +71,20 @@ export const ScoreCreation = async (req: Request, res: Response) => {
         const userStr = String(userId);
         const userDoc = await User.findById(userStr);
         if (userDoc) {
-            const currentBest = userDoc.bestScores?.get(category) || 0;
-            if (createdScore.scoreValue > currentBest) {
-                if (!userDoc.bestScores) {
+            // Because previous schema stored numbers, we might need a fallback or clear them, but assuming a fresh start or checking type is too complex.
+            // Let's assume the DB will either have the object or undefined if it's new. (For existing number data, Mongoose might cast it or crash, but we'll read `.wpm` if it's an object).
+            const existingEntry = userDoc.bestScores?.get(category) as any;
+            const currentBestWpm = existingEntry && typeof existingEntry === 'object' ? existingEntry.wpm : (typeof existingEntry === 'number' ? existingEntry : 0);
 
+            if (createdScore.scoreValue > currentBestWpm) {
+                if (!userDoc.bestScores) {
                     userDoc.bestScores = new Map();
                 }
-                userDoc.bestScores.set(category, createdScore.scoreValue);
+                userDoc.bestScores.set(category, {
+                    wpm: createdScore.scoreValue,
+                    accuracy: createdScore.accuracy,
+                    date: new Date()
+                } as any);
                 await userDoc.save();
             }
         }

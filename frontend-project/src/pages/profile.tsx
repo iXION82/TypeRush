@@ -42,19 +42,17 @@ export default function ProfilePage() {
         const mode = parts[0] === 'time' ? 'Time' : 'Words';
         const amount = parts[0] === 'time' ? `${parts[1]}s` : `${parts[1]}w`;
 
-        const hasPunc = parts.includes('puncTrue');
-        const hasNums = parts.includes('numTrue');
-
-        let mods = '';
-        if (hasPunc && hasNums) mods = ' (Punctuation & Numbers)';
-        else if (hasPunc) mods = ' (Punctuation)';
-        else if (hasNums) mods = ' (Numbers)';
-
-        return `${mode} ${amount}${mods}`;
+        return `${mode} ${amount}`;
     };
 
     const bestScoresList = user.bestScores
-        ? Object.entries(user.bestScores).sort((a, b) => b[1] - a[1])
+        ? Object.entries(user.bestScores)
+            .filter(([category]) => !category.startsWith('time-15') && !category.startsWith('words-10'))
+            .sort((a, b) => {
+                const wpmA = typeof a[1] === 'number' ? a[1] : a[1].wpm;
+                const wpmB = typeof b[1] === 'number' ? b[1] : b[1].wpm;
+                return wpmB - wpmA;
+            })
         : [];
 
     return (
@@ -175,26 +173,52 @@ export default function ProfilePage() {
                             </h3>
 
                             {bestScoresList.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {bestScoresList.map(([category, score]) => (
-                                        <div
-                                            key={category}
-                                            className="flex items-center justify-between p-4 rounded-2xl bg-zinc-800/30 border border-zinc-700/50 hover:bg-zinc-800/60 hover:border-zinc-600/50 transition-all duration-300 group"
-                                        >
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-semibold text-zinc-200 group-hover:text-amber-400 transition-colors">
-                                                    {formatCategoryName(category)}
-                                                </span>
-                                                <span className="text-[10px] text-zinc-500 font-mono mt-1 opacity-60">
-                                                    {category}
-                                                </span>
+                                <div className="flex flex-col gap-3">
+                                    {bestScoresList.map(([category, scoreData]) => {
+                                        const wpm = typeof scoreData === 'number' ? scoreData : scoreData.wpm;
+                                        const accuracy = typeof scoreData === 'number' ? null : scoreData.accuracy;
+                                        const dateStr = typeof scoreData === 'number' || !scoreData.date ? null : new Date(scoreData.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+
+                                        return (
+                                            <div
+                                                key={category}
+                                                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-zinc-800/30 border border-zinc-700/50 hover:bg-zinc-800/60 transition-all duration-300 group gap-4 sm:gap-0"
+                                            >
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-semibold text-zinc-200 group-hover:text-amber-400 transition-colors flex items-center gap-2">
+                                                        {formatCategoryName(category)}
+                                                        {category.includes('puncTrue') && (
+                                                            <span className="px-2 py-0.5 rounded-full bg-zinc-700/50 text-[10px] text-zinc-300 font-bold border border-zinc-600/50">
+                                                                Punctuation
+                                                            </span>
+                                                        )}
+                                                        {category.includes('numTrue') && (
+                                                            <span className="px-2 py-0.5 rounded-full bg-zinc-700/50 text-[10px] text-zinc-300 font-bold border border-zinc-600/50">
+                                                                Numbers
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                    <span className="text-[10px] text-zinc-500 font-mono mt-1 opacity-60 flex items-center gap-2">
+                                                        {dateStr && <span>{dateStr}</span>}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex items-center gap-6 self-start sm:self-auto">
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Accuracy</span>
+                                                        <span className="text-lg font-bold text-zinc-300 mr-2">{accuracy ? `${accuracy}%` : '-'}</span>
+                                                    </div>
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Score</span>
+                                                        <div className="flex items-baseline gap-1.5 px-3 py-1.5 bg-zinc-900/50 rounded-xl border border-zinc-800">
+                                                            <span className="text-xl font-bold text-amber-400">{wpm.toLocaleString()}</span>
+                                                            <span className="text-[10px] uppercase text-zinc-500 font-bold">WPM</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="flex items-baseline gap-1.5 px-3 py-1.5 bg-zinc-900/50 rounded-xl border border-zinc-800">
-                                                <span className="text-xl font-bold text-amber-400">{score.toLocaleString()}</span>
-                                                <span className="text-[10px] uppercase text-zinc-500 font-bold">Pts</span>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                             ) : (
                                 <div className="text-center py-16 bg-zinc-800/20 border border-zinc-800 border-dashed rounded-3xl">
