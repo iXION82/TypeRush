@@ -31,3 +31,32 @@ export const getRandomText = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+export const createText = async (req: Request, res: Response) => {
+    try {
+        const { content, mode, includeNumbers, includePunctuation, language } = req.body;
+
+        if (!content || !mode) {
+            return res.status(400).json({ message: "Content and mode are required" });
+        }
+
+        const wordCount = content.trim().split(/\s+/).length;
+
+        const newText = new TextAsset({
+            content,
+            mode,
+            wordCount,
+            includeNumbers: includeNumbers || false,
+            includePunctuation: includePunctuation || false,
+            language: language || 'english'
+        });
+
+        await newText.save();
+
+        res.status(201).json({ message: "Text added successfully", text: newText });
+
+    } catch (error) {
+        console.error("Error adding text:", error);
+        res.status(500).json({ message: "Server error while adding text" });
+    }
+};

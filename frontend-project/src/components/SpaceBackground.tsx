@@ -112,7 +112,6 @@ function spawnOneConstellation(stars: Star[], usedIndices: Set<number>): Constel
     for (let i = 0; i < chain.length - 1; i++) {
         lines.push({ from: chain[i].idx, to: chain[i + 1].idx });
     }
-    // Close the shape
     lines.push({ from: chain[chain.length - 1].idx, to: chain[0].idx });
 
     return { lines, alpha: 0 };
@@ -141,7 +140,6 @@ export function SpaceBackground() {
         randomBetween(SHOOTING_STAR_INTERVAL_MIN, SHOOTING_STAR_INTERVAL_MAX)
     );
 
-    // Store themeConfig in a ref so canvas draw loop always reads latest
     const themeConfigRef = useRef(themeConfig);
     useEffect(() => {
         themeConfigRef.current = themeConfig;
@@ -164,7 +162,6 @@ export function SpaceBackground() {
         starsRef.current = createStars(w, h);
         usedStarIndicesRef.current = new Set();
         constellationsRef.current = [];
-        // Spawn 2 initial constellations
         for (let i = 0; i < 2; i++) {
             const group = spawnOneConstellation(starsRef.current, usedStarIndicesRef.current);
             if (group) constellationsRef.current.push(group);
@@ -222,7 +219,6 @@ export function SpaceBackground() {
             }
             const scrollY = scrollOffsetRef.current;
 
-            // Periodically spawn new constellations
             if (timestamp - lastConstellationRef.current > nextConstellationDelay.current) {
                 lastConstellationRef.current = timestamp;
                 nextConstellationDelay.current = randomBetween(CONSTELLATION_SPAWN_MIN, CONSTELLATION_SPAWN_MAX);
@@ -234,7 +230,6 @@ export function SpaceBackground() {
 
             ctx.clearRect(0, 0, w, h);
 
-            // Theme-driven background gradient
             const gradient = ctx.createRadialGradient(
                 w * 0.5, h * 0.4, 0,
                 w * 0.5, h * 0.4, Math.max(w, h) * 0.8
@@ -245,7 +240,6 @@ export function SpaceBackground() {
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, w, h);
 
-            // Theme-driven nebula 1
             const nebula1 = ctx.createRadialGradient(
                 w * 0.2, h * 0.6, 0, w * 0.2, h * 0.6, w * 0.35
             );
@@ -254,7 +248,6 @@ export function SpaceBackground() {
             ctx.fillStyle = nebula1;
             ctx.fillRect(0, 0, w, h);
 
-            // Theme-driven nebula 2
             const nebula2 = ctx.createRadialGradient(
                 w * 0.75, h * 0.3, 0, w * 0.75, h * 0.3, w * 0.3
             );
@@ -272,14 +265,11 @@ export function SpaceBackground() {
                 return sy;
             };
 
-            // Theme-driven constellation lines with slow fade-in
             for (const group of constellationsRef.current) {
-                // Slowly fade in the constellation
                 if (group.alpha < 1) {
                     group.alpha = Math.min(1, group.alpha + 0.004);
                 }
 
-                // Parse the base constellation color and apply group alpha
                 const baseColor = currentTheme.constellationColor;
                 const alphaMatch = baseColor.match(/([\d.]+)\)$/);
                 const baseAlpha = alphaMatch ? parseFloat(alphaMatch[1]) : 0.15;
@@ -293,7 +283,6 @@ export function SpaceBackground() {
                     const s2 = stars[line.to];
                     const y1 = getWrappedY(s1.y);
                     const y2 = getWrappedY(s2.y);
-                    // Skip lines where stars are on opposite sides of the scroll wrap
                     if (Math.abs(y1 - y2) > h * 0.5) continue;
                     ctx.moveTo(s1.x, y1);
                     ctx.lineTo(s2.x, y2);
@@ -342,7 +331,6 @@ export function SpaceBackground() {
                 ctx.fill();
             }
 
-            // Draw faint lines from cursor to nearby stars
             for (const ns of nearbyStars) {
                 const lineAlpha = (1 - ns.dist / GLOW_RADIUS) * 0.2;
                 const lineGrad = ctx.createLinearGradient(mx, my, ns.sx, ns.sy);
@@ -422,7 +410,6 @@ export function SpaceBackground() {
         };
     }, [initCanvas, settings.backgroundAnimation]);
 
-    // When animation is disabled, render a static themed gradient instead of the canvas
     if (!settings.backgroundAnimation) {
         const bg = themeConfig.gradient;
         return (

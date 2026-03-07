@@ -71,8 +71,6 @@ export const ScoreCreation = async (req: Request, res: Response) => {
         const userStr = String(userId);
         const userDoc = await User.findById(userStr);
         if (userDoc) {
-            // Because previous schema stored numbers, we might need a fallback or clear them, but assuming a fresh start or checking type is too complex.
-            // Let's assume the DB will either have the object or undefined if it's new. (For existing number data, Mongoose might cast it or crash, but we'll read `.wpm` if it's an object).
             const existingEntry = userDoc.bestScores?.get(category) as any;
             const currentBestWpm = existingEntry && typeof existingEntry === 'object' ? existingEntry.wpm : (typeof existingEntry === 'number' ? existingEntry : 0);
 

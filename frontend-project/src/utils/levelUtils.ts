@@ -1,7 +1,7 @@
 const BASE_EXP = 100;
 const MULTIPLIER = 1.1;
 
-/** XP required to go from level `n` to level `n+1` */
+
 export function expRequiredForLevel(level: number): number {
     return Math.floor(BASE_EXP * Math.pow(MULTIPLIER, level - 1));
 }
@@ -13,7 +13,7 @@ export interface LevelData {
     progress: number;          // 0–1 fraction through the current level
 }
 
-/** Given a total accumulated EXP, compute level + progress */
+
 export function getLevelData(totalExp: number): LevelData {
     let level = 1;
     let remaining = totalExp;

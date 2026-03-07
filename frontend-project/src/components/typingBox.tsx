@@ -354,7 +354,6 @@ export function TypingBox() {
     }, [currentLetterIdx, currentWordIdx, typedWords, words, state, mode, level, startGameTimer, startGameWords, getWordLimit]);
     const results = state === "end" ? calculateStats() : null;
 
-    // Live stats — computed every render during play (cheap, no extra state)
     const liveStats = useMemo(() => {
         const totalChars = stats.correctChar + stats.incorrectChar;
         const accuracy = totalChars === 0 ? 100 : (stats.correctChar / totalChars) * 100;

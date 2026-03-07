@@ -7,7 +7,6 @@ export const createScoreAndUpdateUser = async (
   try {
     const userId = scoreData.userId;
 
-    // 1. Create the score record
     const scoreRes = await api.post("/score/create", {
       userId,
       accuracy: scoreData.accuracy,
@@ -20,7 +19,6 @@ export const createScoreAndUpdateUser = async (
     const score = scoreRes.data;
     const scoreIds = score._id;
 
-    // 2. Atomically update user stats + push scoreId
     const userRes = await api.patch(`/user/${userId}`, {
       scoreIds,
       exp: scoreData.exp ?? 0,

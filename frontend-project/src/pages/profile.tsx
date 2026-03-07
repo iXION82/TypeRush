@@ -11,7 +11,6 @@ export default function ProfilePage() {
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    // If suddenly logged out, navigate away or show nothing
     if (!user) {
         return (
             <div className="min-h-screen bg-transparent flex flex-col">
@@ -62,7 +61,7 @@ export default function ProfilePage() {
             <Navbar />
 
             <main className="flex-1 w-full max-w-5xl mx-auto p-4 sm:p-8 flex flex-col gap-6 fade-in duration-300">
-                {/* Back Button */}
+                {}
                 <button
                     onClick={() => navigate(-1)}
                     className="self-start flex items-center gap-2 text-zinc-400 hover:text-amber-400 transition-colors py-2"
@@ -70,7 +69,7 @@ export default function ProfilePage() {
                     <ArrowLeft className="w-4 h-4" /> Return
                 </button>
 
-                {/* Profile Header Card */}
+                {}
                 <div className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-700/50 rounded-3xl p-8 relative overflow-hidden shadow-2xl">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
@@ -114,10 +113,10 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column: Lifetime Stats & Achievements */}
+                    {}
                     <div className="lg:col-span-1 flex flex-col gap-6">
 
-                        {/* Lifetime Stats Card */}
+                        {}
                         <div className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-700/50 rounded-3xl p-6">
                             <h3 className="text-sm uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-2 mb-6">
                                 <Target className="w-4 h-4 text-emerald-400" /> Lifetime Stats
@@ -154,8 +153,8 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {/* Achievements Space */}
-                        {/* Achievements Summary Link */}
+                        {}
+                        {}
                         <div
                             onClick={() => navigate('/achievements')}
                             className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-700/50 rounded-3xl p-6 flex flex-col justify-between hover:bg-zinc-800/60 hover:border-amber-500/30 transition-all cursor-pointer group"
@@ -181,7 +180,7 @@ export default function ProfilePage() {
 
                     </div>
 
-                    {/* Right Column: Category Bests */}
+                    {}
                     <div className="lg:col-span-2 relative">
                         <div className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-700/50 rounded-3xl p-6 sm:p-8 h-full">
                             <h3 className="text-sm uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-2 mb-6">

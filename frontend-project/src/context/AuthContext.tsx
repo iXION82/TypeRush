@@ -79,7 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const res = await api.get(`/user/${user._id}/profile`);
             setUser(res.data);
         } catch {
-            // silent fail
         }
     };
 

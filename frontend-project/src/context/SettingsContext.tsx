@@ -5,16 +5,13 @@ export type FontSize = 'small' | 'medium' | 'large';
 export type CaretStyle = 'line' | 'block' | 'underline';
 
 export interface AppSettings {
-    // Profile
     username: string;
     email: string;
     avatar: number;
-    // Theme & Visuals
     theme: ThemeOption;
     backgroundAnimation: boolean;
     fontSize: FontSize;
     highContrast: boolean;
-    // Typing Window
     liveWpm: boolean;
     liveAccuracy: boolean;
     smoothCaret: boolean;
@@ -22,7 +19,6 @@ export interface AppSettings {
     caretStyle: CaretStyle;
 }
 
-// Avatar paths helper
 export const AVATAR_COUNT = 11;
 export const getAvatarPath = (num: number) => `/avator%20pic/ava${num}.png`;
 
@@ -60,11 +56,10 @@ function loadSettings(): AppSettings {
         if (saved) {
             return { ...defaultSettings, ...JSON.parse(saved) };
         }
-    } catch { /* ignore */ }
+    } catch {  }
     return defaultSettings;
 }
 
-// Theme color configurations for the canvas background
 export const THEME_CONFIGS = {
     'dark-space': {
         gradient: [
@@ -98,7 +93,6 @@ export const THEME_CONFIGS = {
     },
 } as const;
 
-// Font size CSS values
 export const FONT_SIZE_MAP: Record<FontSize, string> = {
     small: '14px',
     medium: '16px',
@@ -112,12 +106,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setSettings(prev => ({ ...prev, ...partial }));
     };
 
-    // Persist to localStorage on every change
     useEffect(() => {
         localStorage.setItem('typerush-settings', JSON.stringify(settings));
     }, [settings]);
 
-    // Apply font size to the document root
     useEffect(() => {
         document.documentElement.style.fontSize = FONT_SIZE_MAP[settings.fontSize];
     }, [settings.fontSize]);

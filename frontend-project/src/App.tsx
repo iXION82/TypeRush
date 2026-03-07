@@ -5,6 +5,7 @@ import LoginPage from './pages/login'
 import SettingsPage from './pages/settings'
 import ProfilePage from './pages/profile'
 import AchievementsPage from './pages/achievements'
+import AdminTextPage from './pages/adminText'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SpaceBackground } from './components/SpaceBackground';
 import { SettingsProvider } from './context/SettingsContext';
@@ -27,6 +28,7 @@ function App() {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/achievements" element={<AchievementsPage />} />
+              <Route path="/admin-text" element={<AdminTextPage />} />
             </Routes>
           </div>
         </BrowserRouter>

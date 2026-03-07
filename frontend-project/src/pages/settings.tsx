@@ -85,7 +85,6 @@ const SettingsPage = () => {
     const activeTab = (!user && selectedTab === 'profile') ? 'theme' : selectedTab;
     const setActiveTab = setSelectedTab;
 
-    // Profile edit state — seeded from AuthContext user
     const [username, setUsername] = useState(user?.name ?? '');
     const [selectedAvatar, setSelectedAvatar] = useState(user?.avaPic ?? 1);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -135,7 +134,7 @@ const SettingsPage = () => {
                 </div>
             )}
 
-            {/* Current avatar preview */}
+            { }
             <div className="flex items-center gap-5 py-4">
                 <div className="
                     w-20 h-20 rounded-2xl
@@ -160,7 +159,7 @@ const SettingsPage = () => {
                 </div>
             </div>
 
-            {/* Avatar picker */}
+            { }
             <div>
                 <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1 mb-3 block">
                     Choose Avatar
@@ -198,7 +197,7 @@ const SettingsPage = () => {
 
             <div className="w-full h-px bg-zinc-800/80" />
 
-            {/* Username field */}
+            { }
             <div className="space-y-2">
                 <label className="text-xs uppercase tracking-widest text-zinc-400 ml-1">
                     Username
