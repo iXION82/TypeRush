@@ -456,17 +456,16 @@ export function TypingBox() {
                     ) : (<div className="relative select-none leading-relaxed wrap-break-word">
                         <span
                             ref={caretRef}
-                            className="
+                            className={`
                                 absolute
-                                w-0.5
-                                h-[1em]
-                                bg-amber-500
-                                rounded
+                                ${settings.caretStyle === 'line' ? 'w-0.5 h-[1em] bg-amber-500 rounded' :
+                                    settings.caretStyle === 'block' ? 'w-[0.6em] h-[1em] bg-amber-500/50 rounded-sm' :
+                                        'w-[0.6em] h-[0.14em] bg-amber-500 rounded-full translate-y-[0.1em]'}
                                 animate-pulse
-                                transition-all
-                                duration-75
-                                ease-out
-                                z-10"/>
+                                ${settings.smoothCaret ? 'transition-all duration-75 ease-out' : ''}
+                                z-10
+                            `}
+                        />
 
                         {words.map((word, wordIdx) => {
                             const typed = typedWords[wordIdx] || "";
