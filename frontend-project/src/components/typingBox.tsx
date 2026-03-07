@@ -252,7 +252,7 @@ export function TypingBox() {
             accuracy: Number(result.accuracy),
             netWPM: Number(result.net),
             userId,
-            gameMode: mode,
+            gameMode: `${mode}-${mode === 'time' ? (level === 1 ? 30 : level === 2 ? 60 : 120) : (level === 1 ? 25 : level === 2 ? 50 : 100)}`,
             punctuation,
             numbers,
             totalCharsTyped: totalChars,

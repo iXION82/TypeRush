@@ -1,42 +1,59 @@
 import { useState, useEffect } from 'react';
-import { Trophy, Medal, Zap, Target, User } from 'lucide-react';
+import { Trophy, Medal, Zap, Target, User, Clock, Hash, AlignLeft, AtSign } from 'lucide-react';
 import { Navbar } from '../components/navbar';
+import api from '../api/api';
+import { getAvatarPath } from '../context/SettingsContext';
 
-interface Score {
-    id: string;
-    username: string;
-    wpm: number;
-    accuracy: number;
-    date: string;
+interface LeaderboardScore {
+    _id: string;
+    scoreId: {
+        _id: string;
+        accuracy: number;
+        netWPM: number;
+        createdAt: string;
+    };
+    scoreValue: number;
+    userId: {
+        _id: string;
+        name: string;
+        avaPic: number;
+    };
 }
 
+type Mode = 'time' | 'words';
+type Level = 1 | 2 | 3;
+
 const LeaderboardPage = () => {
-    const [scores, setScores] = useState<Score[]>([]);
+    const [scores, setScores] = useState<LeaderboardScore[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    const [mode, setMode] = useState<Mode>('time');
+    const [level, setLevel] = useState<Level>(2);
+    const [punctuation, setPunctuation] = useState(false);
+    const [numbers, setNumbers] = useState(false);
 
     useEffect(() => {
         const fetchScores = async () => {
             setIsLoading(true);
-            const mockData: Score[] = [
-                { id: '1', username: 'keyboard_wizard', wpm: 156, accuracy: 100, date: '2023-10-12' },
-                { id: '2', username: 'null_pointer', wpm: 142, accuracy: 98.5, date: '2023-11-05' },
-                { id: '3', username: 'sudo_user', wpm: 138, accuracy: 99.2, date: '2023-09-28' },
-                { id: '4', username: 'vim_enthusiast', wpm: 125, accuracy: 96.0, date: '2023-12-01' },
-                { id: '5', username: 'qwerty_hero', wpm: 118, accuracy: 97.5, date: '2023-10-30' },
-                { id: '6', username: 'ctrl_alt_del', wpm: 112, accuracy: 94.8, date: '2023-11-15' },
-                { id: '7', username: 'fast_fingers', wpm: 105, accuracy: 98.0, date: '2023-10-05' },
-                { id: '8', username: 'code_monkey', wpm: 98, accuracy: 95.5, date: '2023-11-20' },
-                { id: '9', username: 'pixel_pusher', wpm: 92, accuracy: 99.0, date: '2023-09-15' },
-                { id: '10', username: 'junior_dev', wpm: 88, accuracy: 92.5, date: '2023-12-10' },
-            ];
-            setTimeout(() => {
-                setScores(mockData);
+            const gameLength = mode === 'time'
+                ? (level === 1 ? 30 : level === 2 ? 60 : 120)
+                : (level === 1 ? 25 : level === 2 ? 50 : 100);
+            const gameModeStr = `${mode}-${gameLength}`;
+            const category = `${gameModeStr}-${punctuation ? 'puncTrue' : 'puncFalse'}-${numbers ? 'numTrue' : 'numFalse'}`;
+
+            try {
+                const res = await api.get(`/score/leaderboard?category=${category}`);
+                setScores(res.data);
+            } catch (error) {
+                console.error("Failed to fetch leaderboard", error);
+                setScores([]);
+            } finally {
                 setIsLoading(false);
-            }, 1000);
+            }
         };
 
         fetchScores();
-    }, []);
+    }, [mode, level, punctuation, numbers]);
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -55,10 +72,72 @@ const LeaderboardPage = () => {
     return (
         <div className="min-h-screen flex flex-col bg-transparent text-gray-200">
             <Navbar />
-            <main className="flex-1 flex items-center justify-center p-4 font-mono">
+            <main className="flex-1 flex flex-col items-center p-4 font-mono">
+                {/* Filters Section */}
+                <div className="w-full max-w-4xl mb-6 bg-zinc-900/60 backdrop-blur-md rounded-2xl border border-zinc-800 p-4">
+                    <div className="flex flex-wrap justify-center gap-4 text-sm font-medium">
+
+                        {/* Mode */}
+                        <div className="flex bg-zinc-800/50 rounded-lg p-1 border border-zinc-700/50">
+                            <button
+                                onClick={() => setMode('time')}
+                                className={`px-4 py-1.5 rounded-md flex items-center gap-2 transition-colors ${mode === 'time' ? 'bg-amber-500/20 text-amber-400' : 'text-zinc-400 hover:text-zinc-200'}`}
+                            >
+                                <Clock className="w-4 h-4" /> Time
+                            </button>
+                            <button
+                                onClick={() => setMode('words')}
+                                className={`px-4 py-1.5 rounded-md flex items-center gap-2 transition-colors ${mode === 'words' ? 'bg-amber-500/20 text-amber-400' : 'text-zinc-400 hover:text-zinc-200'}`}
+                            >
+                                <AlignLeft className="w-4 h-4" /> Words
+                            </button>
+                        </div>
+
+                        {/* Level / Amount */}
+                        <div className="flex bg-zinc-800/50 rounded-lg p-1 border border-zinc-700/50">
+                            <button
+                                onClick={() => setLevel(1)}
+                                className={`px-4 py-1.5 rounded-md transition-colors ${level === 1 ? 'bg-amber-500/20 text-amber-400' : 'text-zinc-400 hover:text-zinc-200'}`}
+                            >
+                                {mode === 'time' ? '30s' : '25w'}
+                            </button>
+                            <button
+                                onClick={() => setLevel(2)}
+                                className={`px-4 py-1.5 rounded-md transition-colors ${level === 2 ? 'bg-amber-500/20 text-amber-400' : 'text-zinc-400 hover:text-zinc-200'}`}
+                            >
+                                {mode === 'time' ? '60s' : '50w'}
+                            </button>
+                            <button
+                                onClick={() => setLevel(3)}
+                                className={`px-4 py-1.5 rounded-md transition-colors ${level === 3 ? 'bg-amber-500/20 text-amber-400' : 'text-zinc-400 hover:text-zinc-200'}`}
+                            >
+                                {mode === 'time' ? '120s' : '100w'}
+                            </button>
+                        </div>
+
+                        {/* Modifiers */}
+                        <div className="flex bg-zinc-800/50 rounded-lg p-1 border border-zinc-700/50">
+                            <button
+                                onClick={() => setPunctuation(!punctuation)}
+                                className={`px-4 py-1.5 rounded-md flex items-center gap-2 transition-colors ${punctuation ? 'bg-amber-500/20 text-amber-400' : 'text-zinc-400 hover:text-zinc-200'}`}
+                            >
+                                <AtSign className="w-4 h-4" /> Punc
+                            </button>
+                            <button
+                                onClick={() => setNumbers(!numbers)}
+                                className={`px-4 py-1.5 rounded-md flex items-center gap-2 transition-colors ${numbers ? 'bg-amber-500/20 text-amber-400' : 'text-zinc-400 hover:text-zinc-200'}`}
+                            >
+                                <Hash className="w-4 h-4" /> Nums
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+                {/* Leaderboard Board */}
                 <div className="
                 w-full 
-                max-w-3xl 
+                max-w-4xl 
                 rounded-3xl 
                 bg-zinc-900/70 
                 backdrop-blur-xl 
@@ -77,11 +156,18 @@ const LeaderboardPage = () => {
                                 <Trophy className="text-amber-400 w-6 h-6" />
                                 Leaderboard
                             </h1>
-                            <p className="text-zinc-500 text-sm mt-1">Top 10 all-time best scores</p>
+                            <p className="text-zinc-500 text-sm mt-1">Top 10 all-time best scores for this category</p>
                         </div>
 
-                        <div className="hidden sm:flex gap-2">
-                            <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">All Time</span>
+                        <div className="hidden sm:flex flex-col items-end gap-1">
+                            <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
+                                {mode.toUpperCase()} • {mode === 'time' ? (level === 1 ? '30s' : level === 2 ? '60s' : '120s') : (level === 1 ? '25w' : level === 2 ? '50w' : '100w')}
+                            </span>
+                            {(punctuation || numbers) && (
+                                <span className="text-[10px] text-zinc-500 font-bold tracking-wider">
+                                    {punctuation && 'PUNC '}{numbers && 'NUMS'}
+                                </span>
+                            )}
                         </div>
                     </div>
 
@@ -96,18 +182,18 @@ const LeaderboardPage = () => {
 
                             <div className="grid grid-cols-12 text-xs uppercase tracking-widest text-zinc-500 px-4 pb-2">
                                 <div className="col-span-1 text-center">Rank</div>
-                                <div className="col-span-5 md:col-span-4 pl-2">User</div>
-                                <div className="col-span-3 text-right">WPM</div>
-                                <div className="col-span-3 md:col-span-2 text-right">Acc</div>
+                                <div className="col-span-4 pl-2">User</div>
+                                <div className="col-span-3 text-right">Score</div>
+                                <div className="col-span-2 text-right">WPM / Acc</div>
                                 <div className="hidden md:block col-span-2 text-right">Date</div>
                             </div>
 
-                            {scores.slice(0, 10).map((score, index) => {
+                            {scores.map((score, index) => {
                                 const style = getRankStyle(index);
 
                                 return (
                                     <div
-                                        key={score.id}
+                                        key={score._id || index}
                                         className={`
                                         grid grid-cols-12 items-center 
                                         p-4 rounded-xl 
@@ -121,28 +207,36 @@ const LeaderboardPage = () => {
                                             {style.icon}
                                         </div>
 
-                                        <div className="col-span-5 md:col-span-4 flex items-center gap-3 pl-2 overflow-hidden">
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-zinc-800 border border-zinc-700 text-zinc-400`}>
-                                                <User className="w-4 h-4" />
+                                        <div className="col-span-4 flex items-center gap-3 pl-2 overflow-hidden">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden border border-zinc-700 shrink-0 shadow-sm">
+                                                <img
+                                                    src={getAvatarPath(score.userId?.avaPic || 1)}
+                                                    alt="avatar"
+                                                    className="w-full h-full object-cover"
+                                                />
                                             </div>
                                             <span className={`truncate font-semibold ${index === 0 ? 'text-amber-100' : 'text-zinc-300'}`}>
-                                                {score.username}
+                                                {score.userId?.name || 'Unknown'}
                                             </span>
-                                            {index === 0 && <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] bg-amber-500 text-black font-bold">KING</span>}
                                         </div>
 
-                                        <div className="col-span-3 text-right font-bold text-xl text-zinc-100 flex items-center justify-end gap-1">
-                                            {score.wpm}
-                                            <span className="text-[10px] text-zinc-500 font-normal mt-1">WPM</span>
+                                        {/* Score Value (primary focus) */}
+                                        <div className="col-span-3 text-right font-bold text-xl text-amber-400 drop-shadow-sm truncate">
+                                            {score.scoreValue}
                                         </div>
 
-                                        <div className="col-span-3 md:col-span-2 text-right text-zinc-400 flex items-center justify-end gap-1">
-                                            <Target className="w-3 h-3 mb-0.5 opacity-50" />
-                                            {score.accuracy}%
+                                        {/* WPM & Accuracy details */}
+                                        <div className="col-span-2 text-right text-zinc-300 flex flex-col items-end justify-center">
+                                            <div className="flex items-center gap-1 text-sm font-bold">
+                                                {score.scoreId?.netWPM ?? 0} <span className="text-[10px] uppercase font-normal text-zinc-500">WPM</span>
+                                            </div>
+                                            <div className="flex items-center gap-1 text-xs text-zinc-400 opacity-80">
+                                                <Target className="w-3 h-3" /> {score.scoreId?.accuracy ?? 0}%
+                                            </div>
                                         </div>
 
                                         <div className="hidden md:block col-span-2 text-right text-sm text-zinc-600">
-                                            {formatDate(score.date)}
+                                            {score.scoreId?.createdAt ? formatDate(score.scoreId.createdAt) : '—'}
                                         </div>
                                     </div>
                                 );
@@ -154,9 +248,12 @@ const LeaderboardPage = () => {
                                 <Zap className="w-8 h-8 opacity-20" />
                             </div>
                             <p className="text-lg font-medium text-zinc-400">No scores recorded yet</p>
-                            <p className="text-sm">Be the first to claim the throne.</p>
+                            <p className="text-sm">Be the first to claim the throne in this category.</p>
 
-                            <button className="mt-6 px-6 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm transition-all border border-zinc-700">
+                            <button
+                                onClick={() => window.location.href = '/'}
+                                className="mt-6 px-6 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm transition-all border border-zinc-700"
+                            >
                                 Start Typing Test
                             </button>
                         </div>
