@@ -80,7 +80,10 @@ const themeOptions: { key: ThemeOption; label: string; colors: string[] }[] = [
 const SettingsPage = () => {
     const { settings, updateSettings } = useSettings();
     const { user, refreshProfile } = useAuth();
-    const [activeTab, setActiveTab] = useState<Tab>('profile');
+    const [selectedTab, setSelectedTab] = useState<Tab>(user ? 'profile' : 'theme');
+
+    const activeTab = (!user && selectedTab === 'profile') ? 'theme' : selectedTab;
+    const setActiveTab = setSelectedTab;
 
     // Profile edit state — seeded from AuthContext user
     const [username, setUsername] = useState(user?.name ?? '');
@@ -514,7 +517,7 @@ const SettingsPage = () => {
                                 Settings
                             </h1>
                             <nav className="space-y-1">
-                                {tabs.map((tab) => (
+                                {tabs.filter(tab => user || tab.key !== 'profile').map((tab) => (
                                     <button
                                         key={tab.key}
                                         onClick={() => setActiveTab(tab.key)}

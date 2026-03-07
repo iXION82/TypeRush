@@ -5,12 +5,14 @@ import { createScoreAndUpdateUser } from "../controller/ScoreCreate";
 import { fetchText } from "../controller/TextFetch";
 import { useAuth } from "../context/AuthContext";
 import { getLevelData } from "../utils/levelUtils";
+import { useSettings } from "../context/SettingsContext";
 type Mode = "time" | "words" | "zen";
 type Level = 1 | 2 | 3 | null;
 type State = "idle" | "playing" | "end";
 
 export function TypingBox() {
     const { refreshProfile, user } = useAuth();
+    const { settings } = useSettings();
     const userRef = useRef(user);
     useEffect(() => { userRef.current = user; }, [user]);
     const [text, setText] = useState("Loading...");
@@ -142,7 +144,7 @@ export function TypingBox() {
             correctChar: 0,
             incorrectChar: 0
         });
-        
+
         scoreSubmittedRef.current = false;
 
         if (mode === "time") {
@@ -349,6 +351,24 @@ export function TypingBox() {
     }, [currentLetterIdx, currentWordIdx, typedWords, words, state, mode, level, startGameTimer, startGameWords, getWordLimit]);
     const results = state === "end" ? calculateStats() : null;
 
+    // Live stats — computed every render during play (cheap, no extra state)
+    const liveStats = useMemo(() => {
+        const totalChars = stats.correctChar + stats.incorrectChar;
+        const accuracy = totalChars === 0 ? 100 : (stats.correctChar / totalChars) * 100;
+
+        let elapsedSec: number;
+        if (mode === "time") {
+            const total = level === 1 ? 30 : level === 2 ? 60 : 120;
+            elapsedSec = Math.max(1, total - timer);
+        } else {
+            elapsedSec = Math.max(1, timer);
+        }
+        const minutes = elapsedSec / 60;
+        const wpm = Math.round((stats.correctChar / 5) / minutes);
+
+        return { wpm, accuracy: accuracy.toFixed(1) };
+    }, [stats, timer, mode, level]);
+
     return (
         <div className="flex items-center justify-center w-full">
             <div className="w-full max-w-5xl">
@@ -493,6 +513,40 @@ export function TypingBox() {
                         })}
                     </div>)}
 
+                </div>
+
+                {/* Live stats bar */}
+                <div className={`
+                    mt-8 flex items-center justify-center gap-4
+                    transition-all duration-1000 ease-out
+                    ${state !== "end" && (settings.liveWpm || settings.liveAccuracy)
+                        ? "opacity-100 translate-y-0"
+                        : "opacity-0 -translate-y-2 pointer-events-none"}
+                `}>
+                    {settings.liveWpm && (
+                        <div className="
+                            flex items-center gap-3
+                            px-5 py-2.5 rounded-2xl
+                            bg-zinc-900/80 backdrop-blur-xl
+                            border border-zinc-700/50
+                            shadow-xl shadow-amber-500/5
+                        ">
+                            <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">WPM</span>
+                            <span className="text-amber-400 font-black tabular-nums text-xl leading-none drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]">{liveStats.wpm}</span>
+                        </div>
+                    )}
+                    {settings.liveAccuracy && (
+                        <div className="
+                            flex items-center gap-3
+                            px-5 py-2.5 rounded-2xl
+                            bg-zinc-900/80 backdrop-blur-xl
+                            border border-zinc-700/50
+                            shadow-xl shadow-emerald-500/5
+                        ">
+                            <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">ACC</span>
+                            <span className="text-emerald-400 font-black tabular-nums text-xl leading-none drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">{liveStats.accuracy}%</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
