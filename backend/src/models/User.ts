@@ -11,6 +11,7 @@ export interface IUser extends Document {
     totalCharsTyped: number;
     totalTimeTyped: number;
     gamesPlayed: number;
+    bestScores: Map<string, number>;
 }
 
 const UserSchema = new Schema({
@@ -24,6 +25,11 @@ const UserSchema = new Schema({
     totalCharsTyped: { type: Number, default: 0 },
     totalTimeTyped: { type: Number, default: 0 },
     gamesPlayed: { type: Number, default: 0 },
+    bestScores: {
+        type: Map,
+        of: Number,
+        default: {}
+    }
 }, { timestamps: true });
 
 export default mongoose.model<IUser>('User', UserSchema);

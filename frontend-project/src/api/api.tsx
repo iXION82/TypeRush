@@ -31,11 +31,6 @@ api.interceptors.response.use(
             !originalRequest._retry &&
             !originalRequest.url?.includes("/auth/refresh")
         ) {
-            // Don't redirect for score creation failures
-            if (originalRequest.url?.includes("/score/create")) {
-                return Promise.reject(error);
-            }
-
             originalRequest._retry = true;
             try {
                 const res = await api.post("/auth/refresh");

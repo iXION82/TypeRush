@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import Score from '../models/Score.js';
 import Leaderboard from '../models/Leaderboard.js';
+import User from '../models/User.js';
 
 interface ScoreBody {
     userId: string;
@@ -48,6 +49,23 @@ export const ScoreCreation = async (req: Request, res: Response) => {
             { upsert: true, new: true }
         );
 
+        // Update personal best score in User model
+        const userStr = String(userId);
+        const userDoc = await User.findById(userStr);
+        if (userDoc) {
+            const currentBest = userDoc.bestScores?.get(category) || 0;
+            if (createdScore.scoreValue > currentBest) {
+                // We have a new personal best for this category
+                // Use Mongoose Map syntax to set
+                if (!userDoc.bestScores) {
+                    // @ts-ignore - assigning a new Map if undefined
+                    userDoc.bestScores = new Map();
+                }
+                userDoc.bestScores.set(category, createdScore.scoreValue);
+                await userDoc.save();
+            }
+        }
+
         res.status(201).json(createdScore);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
@@ -66,7 +84,6 @@ export const getLeaderboard = async (req: Request, res: Response) => {
                 path: 'topScores.userId',
                 select: 'name avaPic _id'
             })
-            // We can also populate the score data if we need more than scoreValue, but the basic info is often enough.
             .populate({
                 path: 'topScores.scoreId',
                 select: 'accuracy netWPM createdAt'
