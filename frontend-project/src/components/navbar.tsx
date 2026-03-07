@@ -108,10 +108,15 @@ export function Navbar() {
                     <div className="w-px h-5 bg-zinc-700/50 mx-2" />
 
                     {user ? (
-                        
-                        <div className="relative" ref={dropdownRef}>
+
+                        <div
+                            className="relative"
+                            ref={dropdownRef}
+                            onMouseEnter={() => setShowDropdown(true)}
+                            onMouseLeave={() => setShowDropdown(false)}
+                        >
                             <button
-                                onClick={() => setShowDropdown(!showDropdown)}
+                                onClick={() => navigate("/profile")}
                                 className="
                                     w-9 h-9 rounded-full
                                     border-2 border-amber-500/40
@@ -213,7 +218,7 @@ export function Navbar() {
                                         </div>
                                     </div>
 
-                                    
+
                                     <div className="px-5 pb-4">
                                         <button
                                             onClick={() => {
@@ -239,7 +244,7 @@ export function Navbar() {
                             )}
                         </div>
                     ) : (
-                        
+
                         <button
                             onClick={() => navigate("/login")}
                             className="

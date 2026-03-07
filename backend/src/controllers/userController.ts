@@ -63,7 +63,7 @@ export const getUserStats = async (req: Request, res: Response) => {
 export const getUserProfile = async (req: Request, res: Response) => {
     try {
         const user = await User.findById(req.params.id)
-            .select('name email avaPic exp level totalCharsTyped totalTimeTyped gamesPlayed');
+            .select('name email avaPic exp level totalCharsTyped totalTimeTyped gamesPlayed bestScores');
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });

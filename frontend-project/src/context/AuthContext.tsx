@@ -12,6 +12,7 @@ export interface UserData {
     totalCharsTyped: number;
     totalTimeTyped: number;
     gamesPlayed: number;
+    bestScores?: Record<string, number>;
 }
 
 interface AuthContextType {

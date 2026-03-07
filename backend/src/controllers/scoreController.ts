@@ -44,7 +44,6 @@ export const ScoreCreation = async (req: Request, res: Response) => {
 
         if (existingScoreIndex !== -1) {
             if (createdScore.scoreValue > leaderboard.topScores![existingScoreIndex]!.scoreValue) {
-                // Replace the lower score with the new higher score
                 leaderboard.topScores![existingScoreIndex] = {
                     scoreId: createdScore._id,
                     scoreValue: createdScore.scoreValue,
@@ -53,7 +52,6 @@ export const ScoreCreation = async (req: Request, res: Response) => {
                 isLeaderboardUpdated = true;
             }
         } else {
-            // New user score for this category
             leaderboard.topScores!.push({
                 scoreId: createdScore._id,
                 scoreValue: createdScore.scoreValue,
@@ -70,16 +68,13 @@ export const ScoreCreation = async (req: Request, res: Response) => {
             await leaderboard.save();
         }
 
-        // Update personal best score in User model
         const userStr = String(userId);
         const userDoc = await User.findById(userStr);
         if (userDoc) {
             const currentBest = userDoc.bestScores?.get(category) || 0;
             if (createdScore.scoreValue > currentBest) {
-                // We have a new personal best for this category
-                // Use Mongoose Map syntax to set
                 if (!userDoc.bestScores) {
-                    // @ts-ignore - assigning a new Map if undefined
+
                     userDoc.bestScores = new Map();
                 }
                 userDoc.bestScores.set(category, createdScore.scoreValue);

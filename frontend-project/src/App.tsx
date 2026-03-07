@@ -3,6 +3,7 @@ import RegisterPage from './pages/register'
 import LeaderboardPage from './pages/leaderBoard';
 import LoginPage from './pages/login'
 import SettingsPage from './pages/settings'
+import ProfilePage from './pages/profile'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SpaceBackground } from './components/SpaceBackground';
 import { SettingsProvider } from './context/SettingsContext';
@@ -23,6 +24,7 @@ function App() {
               <Route path="/home" element={<Home />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
             </Routes>
           </div>
         </BrowserRouter>
