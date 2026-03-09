@@ -1,5 +1,5 @@
 import {
-    Clock, Keyboard, Star, Trophy, ArrowLeft, ArrowUpCircle, Crown, Flame, Target, Award, Zap, Lock, BookOpen
+    Clock, Keyboard, Star, Trophy, Crown, Flame, Target, Award, Zap, BookOpen
 } from 'lucide-react';
 import type { UserData } from '../context/AuthContext';
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Trophy, Medal, Zap, Target, User, Clock, Hash, AlignLeft, AtSign } from 'lucide-react';
+import { Trophy, Medal, Zap, Target, Clock, Hash, AlignLeft, AtSign } from 'lucide-react';
 import { Navbar } from '../components/navbar';
 import api from '../api/api';
 import { getAvatarPath } from '../context/SettingsContext';
@@ -73,11 +73,11 @@ const LeaderboardPage = () => {
         <div className="min-h-screen flex flex-col bg-transparent text-gray-200">
             <Navbar />
             <main className="flex-1 flex flex-col items-center p-4 font-mono">
-                {}
+                { }
                 <div className="w-full max-w-4xl mb-6 bg-zinc-900/60 backdrop-blur-md rounded-2xl border border-zinc-800 p-4">
                     <div className="flex flex-wrap justify-center gap-4 text-sm font-medium">
 
-                        {}
+                        { }
                         <div className="flex bg-zinc-800/50 rounded-lg p-1 border border-zinc-700/50">
                             <button
                                 onClick={() => setMode('time')}
@@ -93,7 +93,7 @@ const LeaderboardPage = () => {
                             </button>
                         </div>
 
-                        {}
+                        { }
                         <div className="flex bg-zinc-800/50 rounded-lg p-1 border border-zinc-700/50">
                             <button
                                 onClick={() => setLevel(1)}
@@ -115,7 +115,7 @@ const LeaderboardPage = () => {
                             </button>
                         </div>
 
-                        {}
+                        { }
                         <div className="flex bg-zinc-800/50 rounded-lg p-1 border border-zinc-700/50">
                             <button
                                 onClick={() => setPunctuation(!punctuation)}
@@ -134,7 +134,7 @@ const LeaderboardPage = () => {
                     </div>
                 </div>
 
-                {}
+                { }
                 <div className="
                 w-full 
                 max-w-4xl 
@@ -220,12 +220,12 @@ const LeaderboardPage = () => {
                                             </span>
                                         </div>
 
-                                        {}
+                                        { }
                                         <div className="col-span-3 text-right font-bold text-xl text-amber-400 drop-shadow-sm truncate">
                                             {score.scoreValue}
                                         </div>
 
-                                        {}
+                                        { }
                                         <div className="col-span-2 text-right text-zinc-300 flex flex-col items-end justify-center">
                                             <div className="flex items-center gap-1 text-sm font-bold">
                                                 {score.scoreId?.netWPM ?? 0} <span className="text-[10px] uppercase font-normal text-zinc-500">WPM</span>
