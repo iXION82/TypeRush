@@ -8,7 +8,6 @@ import { Navbar } from '../components/navbar';
 import api from '../api/api';
 import { AnalyticsGraph } from '../components/AnalyticsGraph';
 import { KeyboardHeatmap } from '../components/KeyboardHeatmap';
-import { KeystrokeReplay } from '../components/KeystrokeReplay';
 
 import { ACHIEVEMENTS } from '../constants/achievements';
 
@@ -306,18 +305,19 @@ export default function ProfilePage() {
                                                 {match.history && match.history.length > 0 && (
                                                     <AnalyticsGraph history={match.history} />
                                                 )}
-                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-                                                    {match.missedKeys && Object.keys(match.missedKeys).length > 0 ? (
-                                                        <KeyboardHeatmap missedKeys={match.missedKeys} />
-                                                    ) : (
-                                                        <div className="w-full mt-6 bg-zinc-800/40 rounded-xl border border-zinc-700/30 p-6 text-center">
-                                                            <h3 className="text-sm uppercase tracking-widest text-zinc-400 mb-2">Key Heatmap</h3>
-                                                            <p className="text-zinc-500">No missed keys! Perfect typing.</p>
-                                                        </div>
-                                                    )}
-                                                    {match.keystrokes && match.keystrokes.length > 0 && (
-                                                        <KeystrokeReplay text="" keystrokes={match.keystrokes} />
-                                                    )}
+                                                <div className="w-full flex justify-center">
+                                                    <div className="w-full max-w-3xl">
+                                                        {match.missedKeys && Object.keys(match.missedKeys).length > 0 ? (
+                                                            <KeyboardHeatmap keyStats={Object.fromEntries(
+                                                                Object.entries(match.missedKeys).map(([k, v]) => [k, { correct: 0, missed: Number(v) }])
+                                                            )} />
+                                                        ) : (
+                                                            <div className="w-full mt-6 bg-zinc-800/40 rounded-xl border border-zinc-700/30 p-6 text-center">
+                                                                <h3 className="text-sm uppercase tracking-widest text-zinc-400 mb-2">Key Heatmap</h3>
+                                                                <p className="text-zinc-500">No missed keys! Perfect typing.</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}

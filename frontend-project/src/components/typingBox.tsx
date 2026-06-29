@@ -8,7 +8,6 @@ import { getLevelData } from "../utils/levelUtils";
 import { useSettings } from "../context/SettingsContext";
 import { AnalyticsGraph } from "./AnalyticsGraph";
 import { KeyboardHeatmap } from "./KeyboardHeatmap";
-import { KeystrokeReplay } from "./KeystrokeReplay";
 type Mode = "time" | "words" | "zen";
 type Level = 1 | 2 | 3 | null;
 type State = "idle" | "playing" | "end";
@@ -282,7 +281,7 @@ export function TypingBox() {
         const { level: newLevel } = getLevelData(newTotalExp);
 
         const backendMissedKeys = Object.fromEntries(
-            Object.entries(keyStats).map(([key, stat]) => [key, stat.missed]).filter(([_, count]) => count > 0)
+            Object.entries(keyStats).map(([key, stat]) => [key, stat.missed] as [string, number]).filter(([_, count]) => count > 0)
         );
 
         const payload: ScorePayload = {
