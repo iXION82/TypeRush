@@ -32,7 +32,7 @@ export function TypingBox() {
     });
     const [history, setHistory] = useState<{ time: number; wpm: number; accuracy: number }[]>([]);
     const [keystrokes, setKeystrokes] = useState<{ key: string; timestamp: number; correct: boolean }[]>([]);
-    const [missedKeys, setMissedKeys] = useState<Record<string, number>>({});
+    const [keyStats, setKeyStats] = useState<Record<string, { correct: number, missed: number }>>({});
 
     const [mode, setMode] = useState<Mode>("time");
     const [timer, setTimer] = useState(60);
@@ -152,7 +152,7 @@ export function TypingBox() {
         });
         setHistory([]);
         setKeystrokes([]);
-        setMissedKeys({});
+        setKeyStats({});
 
         scoreSubmittedRef.current = false;
 
@@ -281,6 +281,10 @@ export function TypingBox() {
         const newTotalExp = currentExp + earnedExp;
         const { level: newLevel } = getLevelData(newTotalExp);
 
+        const backendMissedKeys = Object.fromEntries(
+            Object.entries(keyStats).map(([key, stat]) => [key, stat.missed]).filter(([_, count]) => count > 0)
+        );
+
         const payload: ScorePayload = {
             scoreValue: result.score,
             accuracy: Number(result.accuracy),
@@ -295,7 +299,7 @@ export function TypingBox() {
             newLevel,
             history,
             keystrokes,
-            missedKeys
+            missedKeys: backendMissedKeys
         };
 
         createScoreAndUpdateUser(payload).then(() => {
@@ -371,12 +375,24 @@ export function TypingBox() {
 
             if (isCorrect) {
                 setStats((prev) => ({ ...prev, correctChar: prev.correctChar + 1 }));
+                if (charExpected) {
+                    setKeyStats((prev) => ({
+                        ...prev,
+                        [charExpected]: {
+                            correct: (prev[charExpected]?.correct || 0) + 1,
+                            missed: prev[charExpected]?.missed || 0
+                        }
+                    }));
+                }
             } else {
                 setStats((prev) => ({ ...prev, incorrectChar: prev.incorrectChar + 1 }));
                 if (charExpected) {
-                    setMissedKeys((prev) => ({
+                    setKeyStats((prev) => ({
                         ...prev,
-                        [charExpected]: (prev[charExpected] || 0) + 1
+                        [charExpected]: {
+                            correct: prev[charExpected]?.correct || 0,
+                            missed: (prev[charExpected]?.missed || 0) + 1
+                        }
                     }));
                 }
             }
@@ -557,11 +573,10 @@ export function TypingBox() {
                     <div className="w-full max-w-4xl mx-auto mt-6 flex flex-col gap-6 animate-fade-in">
                         {history.length > 0 && <AnalyticsGraph history={history} />}
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <KeyboardHeatmap missedKeys={missedKeys} />
-                            {keystrokes.length > 0 && (
-                                <KeystrokeReplay text={text} keystrokes={keystrokes} />
-                            )}
+                        <div className="w-full flex justify-center">
+                            <div className="w-full max-w-3xl">
+                                <KeyboardHeatmap keyStats={keyStats} />
+                            </div>
                         </div>
                     </div>
                 )}
