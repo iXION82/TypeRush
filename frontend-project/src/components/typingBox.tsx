@@ -568,7 +568,6 @@ export function TypingBox() {
 
                 </div>
 
-                {/* Analytics panels — rendered OUTSIDE the typing box */}
                 {state === "end" && results && (
                     <div className="w-full max-w-4xl mx-auto mt-6 flex flex-col gap-6 animate-fade-in">
                         {history.length > 0 && <AnalyticsGraph history={history} />}

@@ -31,13 +31,11 @@ export function KeyboardHeatmap({ keyStats }: KeyboardHeatmapProps) {
         }
         
         if (stat.missed > 0) {
-            // Calculate red intensity based on maxMisses
             const intensity = maxMisses > 0 ? stat.missed / maxMisses : 0;
             if (intensity < 0.3) return 'bg-red-900/40 text-red-200 border-red-800/50';
             if (intensity < 0.6) return 'bg-red-700/60 text-red-100 border-red-600/50';
             return 'bg-red-500 text-white border-red-400';
         } else {
-            // Calculate green intensity based on maxCorrect
             const intensity = maxCorrect > 0 ? stat.correct / maxCorrect : 0;
             if (intensity < 0.3) return 'bg-emerald-900/40 text-emerald-200 border-emerald-800/50';
             if (intensity < 0.6) return 'bg-emerald-700/60 text-emerald-100 border-emerald-600/50';
