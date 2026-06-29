@@ -11,11 +11,14 @@ interface ScoreBody {
     gameMode: string;
     punctuation: boolean;
     numbers: boolean;
+    history?: { time: number; wpm: number; accuracy: number }[];
+    keystrokes?: { key: string; timestamp: number; correct: boolean }[];
+    missedKeys?: Record<string, number>;
 }
 
 export const ScoreCreation = async (req: Request, res: Response) => {
     try {
-        const { userId, accuracy, netWPM, scoreValue, gameMode, punctuation, numbers } = req.body;
+        const { userId, accuracy, netWPM, scoreValue, gameMode, punctuation, numbers, history, keystrokes, missedKeys } = req.body;
 
         const newScore = new Score({
             userId,
@@ -24,7 +27,10 @@ export const ScoreCreation = async (req: Request, res: Response) => {
             scoreValue,
             gameMode,
             punctuation,
-            numbers
+            numbers,
+            history,
+            keystrokes,
+            missedKeys
         });
 
         const createdScore = await newScore.save();

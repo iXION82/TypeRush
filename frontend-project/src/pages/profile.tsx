@@ -1,15 +1,30 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trophy, Target, Type, Gamepad2, Star, Clock } from 'lucide-react';
+import { ArrowLeft, Trophy, Target, Type, Gamepad2, Star, Clock, History, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getAvatarPath } from '../context/SettingsContext';
 import { getLevelData } from '../utils/levelUtils';
 import { Navbar } from '../components/navbar';
+import api from '../api/api';
+import { AnalyticsGraph } from '../components/AnalyticsGraph';
+import { KeyboardHeatmap } from '../components/KeyboardHeatmap';
+import { KeystrokeReplay } from '../components/KeystrokeReplay';
 
 import { ACHIEVEMENTS } from '../constants/achievements';
 
 export default function ProfilePage() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [matchHistory, setMatchHistory] = useState<any[]>([]);
+    const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (user && user._id) {
+            api.get(`/user/${user._id}/history`)
+                .then(res => setMatchHistory(res.data))
+                .catch(err => console.error("Failed to load history", err));
+        }
+    }, [user]);
 
     if (!user) {
         return (
@@ -244,6 +259,78 @@ export default function ProfilePage() {
                             )}
                         </div>
                     </div>
+                </div>
+                <div className="mt-6 bg-zinc-900/60 backdrop-blur-xl border border-zinc-700/50 rounded-3xl p-6 sm:p-8">
+                    <h3 className="text-sm uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-2 mb-6">
+                        <History className="w-4 h-4 text-amber-400" /> Match History (Last 20)
+                    </h3>
+                    
+                    {matchHistory.length > 0 ? (
+                        <div className="flex flex-col gap-4">
+                            {matchHistory.map(match => {
+                                const isExpanded = expandedMatch === match._id;
+                                const dateStr = new Date(match.createdAt).toLocaleString();
+                                
+                                return (
+                                    <div key={match._id} className="bg-zinc-800/40 border border-zinc-700/50 rounded-2xl overflow-hidden transition-all">
+                                        <div 
+                                            onClick={() => setExpandedMatch(isExpanded ? null : match._id)}
+                                            className="p-4 flex flex-col sm:flex-row sm:items-center justify-between cursor-pointer hover:bg-zinc-800/80 transition-colors gap-4"
+                                        >
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-bold text-zinc-200 capitalize flex items-center gap-2">
+                                                    {match.gameMode}
+                                                    {match.punctuation && <span className="px-2 py-0.5 rounded-full bg-zinc-700/50 text-[10px] text-zinc-300 font-bold border border-zinc-600/50">Punctuation</span>}
+                                                    {match.numbers && <span className="px-2 py-0.5 rounded-full bg-zinc-700/50 text-[10px] text-zinc-300 font-bold border border-zinc-600/50">Numbers</span>}
+                                                </span>
+                                                <span className="text-[11px] text-zinc-500 font-mono mt-1">{dateStr}</span>
+                                            </div>
+                                            
+                                            <div className="flex items-center gap-6">
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-[10px] text-zinc-500 uppercase tracking-widest">Accuracy</span>
+                                                    <span className="text-lg font-bold text-zinc-300">{match.accuracy}%</span>
+                                                </div>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-[10px] text-zinc-500 uppercase tracking-widest">WPM</span>
+                                                    <span className="text-xl font-bold text-amber-400">{match.netWPM}</span>
+                                                </div>
+                                                <div className="ml-2 text-zinc-500">
+                                                    {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {isExpanded && (
+                                            <div className="p-4 sm:p-6 border-t border-zinc-700/50 bg-zinc-900/40 flex flex-col gap-6">
+                                                {match.history && match.history.length > 0 && (
+                                                    <AnalyticsGraph history={match.history} />
+                                                )}
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+                                                    {match.missedKeys && Object.keys(match.missedKeys).length > 0 ? (
+                                                        <KeyboardHeatmap missedKeys={match.missedKeys} />
+                                                    ) : (
+                                                        <div className="w-full mt-6 bg-zinc-800/40 rounded-xl border border-zinc-700/30 p-6 text-center">
+                                                            <h3 className="text-sm uppercase tracking-widest text-zinc-400 mb-2">Key Heatmap</h3>
+                                                            <p className="text-zinc-500">No missed keys! Perfect typing.</p>
+                                                        </div>
+                                                    )}
+                                                    {match.keystrokes && match.keystrokes.length > 0 && (
+                                                        <KeystrokeReplay text="" keystrokes={match.keystrokes} />
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 bg-zinc-800/20 border border-zinc-800 border-dashed rounded-3xl">
+                            <History className="w-10 h-10 text-zinc-600 mx-auto mb-3" />
+                            <p className="text-zinc-400 text-lg mb-2 font-semibold">No matches played yet.</p>
+                        </div>
+                    )}
                 </div>
 
             </main>

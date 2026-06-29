@@ -6,6 +6,9 @@ import { fetchText } from "../controller/TextFetch";
 import { useAuth } from "../context/AuthContext";
 import { getLevelData } from "../utils/levelUtils";
 import { useSettings } from "../context/SettingsContext";
+import { AnalyticsGraph } from "./AnalyticsGraph";
+import { KeyboardHeatmap } from "./KeyboardHeatmap";
+import { KeystrokeReplay } from "./KeystrokeReplay";
 type Mode = "time" | "words" | "zen";
 type Level = 1 | 2 | 3 | null;
 type State = "idle" | "playing" | "end";
@@ -27,6 +30,9 @@ export function TypingBox() {
         correctChar: 0,
         incorrectChar: 0
     });
+    const [history, setHistory] = useState<{ time: number; wpm: number; accuracy: number }[]>([]);
+    const [keystrokes, setKeystrokes] = useState<{ key: string; timestamp: number; correct: boolean }[]>([]);
+    const [missedKeys, setMissedKeys] = useState<Record<string, number>>({});
 
     const [mode, setMode] = useState<Mode>("time");
     const [timer, setTimer] = useState(60);
@@ -144,6 +150,9 @@ export function TypingBox() {
             correctChar: 0,
             incorrectChar: 0
         });
+        setHistory([]);
+        setKeystrokes([]);
+        setMissedKeys({});
 
         scoreSubmittedRef.current = false;
 
@@ -216,6 +225,23 @@ export function TypingBox() {
         };
     }, [stats, getTimeElapsed, difficultyMultiplier]);
 
+    useEffect(() => {
+        if (state === "playing") {
+            const currentStats = calculateStats();
+            setHistory((prev) => {
+                const newPoint = {
+                    time: currentStats.time,
+                    wpm: Number(currentStats.net),
+                    accuracy: Number(currentStats.accuracy)
+                };
+                if (prev.length > 0 && prev[prev.length - 1].time === newPoint.time) {
+                    return prev;
+                }
+                return [...prev, newPoint];
+            });
+        }
+    }, [timer, state, calculateStats]);
+
 
 
 
@@ -259,6 +285,9 @@ export function TypingBox() {
             totalTimeTyped: result.time,
             exp: earnedExp,
             newLevel,
+            history,
+            keystrokes,
+            missedKeys
         };
 
         createScoreAndUpdateUser(payload).then(() => {
@@ -330,12 +359,24 @@ export function TypingBox() {
             setCurrentLetterIdx((i) => i + 1);
 
             const charExpected = currentTargetWord[currentLetterIdx];
+            const isCorrect = charExpected ? e.key === charExpected : false;
 
-            if (charExpected && e.key === charExpected) {
+            if (isCorrect) {
                 setStats((prev) => ({ ...prev, correctChar: prev.correctChar + 1 }));
             } else {
                 setStats((prev) => ({ ...prev, incorrectChar: prev.incorrectChar + 1 }));
+                if (charExpected) {
+                    setMissedKeys((prev) => ({
+                        ...prev,
+                        [charExpected]: (prev[charExpected] || 0) + 1
+                    }));
+                }
             }
+
+            setKeystrokes((prev) => [
+                ...prev,
+                { key: e.key, timestamp: Date.now(), correct: isCorrect }
+            ]);
 
             if (mode === "words") {
                 const limit = getWordLimit();
@@ -406,9 +447,10 @@ export function TypingBox() {
                         relative
                     ">
                     {state === "end" && results ? (
-                        <div className="absolute inset-0 flex items-center justify-center z-20">
+                        <div className="absolute inset-0 flex items-start justify-center z-20 overflow-y-auto p-4 custom-scrollbar">
                             <div className="
                                 w-full
+                                max-w-4xl
                                 rounded-2xl
                                 bg-zinc-900/90
                                 backdrop-blur-2xl
@@ -444,14 +486,26 @@ export function TypingBox() {
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={restartGame}
-                                    className="
-                                        px-8 py-3 rounded-xl bg-amber-500 text-black font-bold tracking-wide
-                                        hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/30 active:scale-95
-                                    ">
-                                    Restart
-                                </button>
+                                <div className="flex justify-center mt-6">
+                                    <button
+                                        onClick={restartGame}
+                                        className="
+                                            px-8 py-3 rounded-xl bg-amber-500 text-black font-bold tracking-wide
+                                            hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/30 active:scale-95
+                                        ">
+                                        Restart Test
+                                    </button>
+                                </div>
+                                
+                                {history.length > 0 && <AnalyticsGraph history={history} />}
+                                
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+                                    <KeyboardHeatmap missedKeys={missedKeys} />
+                                    {keystrokes.length > 0 && (
+                                        <KeystrokeReplay text={text} keystrokes={keystrokes} />
+                                    )}
+                                </div>
+                                
                             </div>
                         </div>
 

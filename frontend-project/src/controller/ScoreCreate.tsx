@@ -15,6 +15,9 @@ export const createScoreAndUpdateUser = async (
       gameMode: scoreData.gameMode,
       punctuation: scoreData.punctuation,
       numbers: scoreData.numbers,
+      history: scoreData.history,
+      keystrokes: scoreData.keystrokes,
+      missedKeys: scoreData.missedKeys,
     });
     const score = scoreRes.data;
     const scoreIds = score._id;

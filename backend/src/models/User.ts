@@ -18,7 +18,7 @@ const UserSchema = new Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    scoreIds: [{ type: Schema.Types.ObjectId, ref: 'Task' }],
+    scoreIds: [{ type: Schema.Types.ObjectId, ref: 'Score' }],
     avaPic: { type: Number, default: 1, min: 1, max: 11 },
     exp: { type: Number, default: 0 },
     level: { type: Number, default: 1 },
