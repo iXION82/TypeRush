@@ -227,20 +227,28 @@ export function TypingBox() {
 
     useEffect(() => {
         if (state === "playing") {
-            const currentStats = calculateStats();
+            // Calculate actual elapsed seconds
+            let elapsedSeconds: number;
+            if (mode === "time") {
+                const totalDuration = level === 1 ? 30 : level === 3 ? 120 : 60;
+                elapsedSeconds = totalDuration - timer;
+            } else {
+                elapsedSeconds = timer;
+            }
+
+            const totalChars = stats.correctChar + stats.incorrectChar;
+            const minutes = Math.max(elapsedSeconds, 1) / 60;
+            const wpm = Math.round((stats.correctChar / 5) / minutes);
+            const accuracy = totalChars === 0 ? 100 : Math.round((stats.correctChar / totalChars) * 10000) / 100;
+
             setHistory((prev) => {
-                const newPoint = {
-                    time: currentStats.time,
-                    wpm: Number(currentStats.net),
-                    accuracy: Number(currentStats.accuracy)
-                };
-                if (prev.length > 0 && prev[prev.length - 1].time === newPoint.time) {
+                if (prev.length > 0 && prev[prev.length - 1].time === elapsedSeconds) {
                     return prev;
                 }
-                return [...prev, newPoint];
+                return [...prev, { time: elapsedSeconds, wpm, accuracy }];
             });
         }
-    }, [timer, state, calculateStats]);
+    }, [timer, state, mode, level, stats]);
 
 
 
@@ -430,8 +438,8 @@ export function TypingBox() {
                 />
                 <div
                     ref={containerRef}
-                    className="
-                        h-79
+                    className={`
+                        ${state === "end" ? "h-auto min-h-79" : "h-79"}
                         rounded-3xl
                         bg-zinc-900/70
                         backdrop-blur-xl
@@ -442,73 +450,46 @@ export function TypingBox() {
                         text-xl
                         leading-relaxed
                         font-mono
-                        overflow-hidden 
+                        ${state === "end" ? "" : "overflow-hidden"}
                         cursor-default
                         relative
-                    ">
+                    `}>
                     {state === "end" && results ? (
-                        <div className="absolute inset-0 flex items-start justify-center z-20 overflow-y-auto p-4 custom-scrollbar">
-                            <div className="
-                                w-full
-                                max-w-4xl
-                                rounded-2xl
-                                bg-zinc-900/90
-                                backdrop-blur-2xl
-                                border border-zinc-700/50
-                                shadow-2xl
-                                px-10
-                                py-8
-                                text-center
-                                animate-fade-in
-                            ">
+                        <div className="flex flex-col items-center text-center animate-fade-in">
 
-                                <div className="mb-8">
-                                    <div className="text-sm uppercase tracking-widest text-zinc-400">Total Score</div>
-                                    <div className="text-5xl font-extrabold text-amber-400 mt-1 drop-shadow">{results.score}</div>
-                                </div>
-
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-                                    <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 py-4">
-                                        <div className="text-xs uppercase tracking-wide text-zinc-400">Accuracy</div>
-                                        <div className="text-xl font-semibold text-zinc-200">{results.accuracy}%</div>
-                                    </div>
-                                    <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 py-4">
-                                        <div className="text-xs uppercase tracking-wide text-zinc-400">Net WPM</div>
-                                        <div className="text-xl font-semibold text-zinc-200">{results.net}</div>
-                                    </div>
-                                    <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 py-4">
-                                        <div className="text-xs uppercase tracking-wide text-zinc-400">Gross WPM</div>
-                                        <div className="text-xl font-semibold text-zinc-200">{results.gross}</div>
-                                    </div>
-                                    <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 py-4">
-                                        <div className="text-xs uppercase tracking-wide text-zinc-400">Time</div>
-                                        <div className="text-xl font-semibold text-zinc-200">{results.time}s</div>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-center mt-6">
-                                    <button
-                                        onClick={restartGame}
-                                        className="
-                                            px-8 py-3 rounded-xl bg-amber-500 text-black font-bold tracking-wide
-                                            hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/30 active:scale-95
-                                        ">
-                                        Restart Test
-                                    </button>
-                                </div>
-                                
-                                {history.length > 0 && <AnalyticsGraph history={history} />}
-                                
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-                                    <KeyboardHeatmap missedKeys={missedKeys} />
-                                    {keystrokes.length > 0 && (
-                                        <KeystrokeReplay text={text} keystrokes={keystrokes} />
-                                    )}
-                                </div>
-                                
+                            <div className="mb-8">
+                                <div className="text-sm uppercase tracking-widest text-zinc-400">Total Score</div>
+                                <div className="text-5xl font-extrabold text-amber-400 mt-1 drop-shadow">{results.score}</div>
                             </div>
-                        </div>
 
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 w-full max-w-2xl">
+                                <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 py-4">
+                                    <div className="text-xs uppercase tracking-wide text-zinc-400">Accuracy</div>
+                                    <div className="text-xl font-semibold text-zinc-200">{results.accuracy}%</div>
+                                </div>
+                                <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 py-4">
+                                    <div className="text-xs uppercase tracking-wide text-zinc-400">Net WPM</div>
+                                    <div className="text-xl font-semibold text-zinc-200">{results.net}</div>
+                                </div>
+                                <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 py-4">
+                                    <div className="text-xs uppercase tracking-wide text-zinc-400">Gross WPM</div>
+                                    <div className="text-xl font-semibold text-zinc-200">{results.gross}</div>
+                                </div>
+                                <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 py-4">
+                                    <div className="text-xs uppercase tracking-wide text-zinc-400">Time</div>
+                                    <div className="text-xl font-semibold text-zinc-200">{results.time}s</div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={restartGame}
+                                className="
+                                    px-8 py-3 rounded-xl bg-amber-500 text-black font-bold tracking-wide
+                                    hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/30 active:scale-95
+                                ">
+                                Restart Test
+                            </button>
+                        </div>
                     ) : (<div className="relative select-none leading-relaxed wrap-break-word">
                         <span
                             ref={caretRef}
@@ -530,7 +511,8 @@ export function TypingBox() {
                             return (
                                 <span
                                     key={wordIdx}
-                                    className={`inline-block mr-3 mb-2 ${getWordClass(wordIdx)}`}>
+                                    className={`inline-block ${getWordClass(wordIdx)} transition-opacity duration-150 mr-[0.35em]`}
+                                >
                                     {word.split("").map((letter, letterIdx) => (
                                         <span
                                             key={letterIdx}
@@ -569,6 +551,20 @@ export function TypingBox() {
                     </div>)}
 
                 </div>
+
+                {/* Analytics panels — rendered OUTSIDE the typing box */}
+                {state === "end" && results && (
+                    <div className="w-full max-w-4xl mx-auto mt-6 flex flex-col gap-6 animate-fade-in">
+                        {history.length > 0 && <AnalyticsGraph history={history} />}
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <KeyboardHeatmap missedKeys={missedKeys} />
+                            {keystrokes.length > 0 && (
+                                <KeystrokeReplay text={text} keystrokes={keystrokes} />
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 <div className={`
                     mt-8 flex items-center justify-center gap-4
